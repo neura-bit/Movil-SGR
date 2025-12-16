@@ -6,6 +6,7 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.view.MenuItem
+import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
@@ -16,7 +17,12 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import com.example.soprintsgr.data.LocationService
+import com.example.soprintsgr.data.SessionManager
+import com.example.soprintsgr.data.TaskRepository
+import com.example.soprintsgr.data.api.RetrofitClient
+import com.example.soprintsgr.data.api.Task
 import com.example.soprintsgr.ui.login.LoginActivity
+import com.example.soprintsgr.ui.tasks.TasksActivity
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -44,9 +50,12 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
     private lateinit var map: GoogleMap
     private lateinit var drawerLayout: DrawerLayout
     private lateinit var fusedLocationClient: FusedLocationProviderClient
+    private lateinit var sessionManager: SessionManager
     private var isDarkTheme = false
     private var messengerJob: Job? = null
+    private var taskJob: Job? = null
     private val messengerMarkers = mutableMapOf<Int, Marker>()
+    private val taskMarkers = mutableMapOf<Int, Marker>()
 
     private val requestPermissionLauncher =
         registerForActivityResult(
@@ -64,12 +73,26 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        // Initialize SessionManager and RetrofitClient
+        sessionManager = SessionManager(this)
+        RetrofitClient.initialize(this)
+        
+        // Check if user is logged in
+        if (!sessionManager.isLoggedIn()) {
+            navigateToLogin()
+            return
+        }
+        
         setContentView(R.layout.activity_main)
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
         drawerLayout = findViewById(R.id.drawer_layout)
         val navView: NavigationView = findViewById(R.id.nav_view)
         navView.setNavigationItemSelectedListener(this)
+        
+        // Update navigation header with user info
+        updateNavigationHeader(navView)
 
         // Setup Menu Button
         val btnMenu: ImageView = findViewById(R.id.btn_menu)
@@ -98,12 +121,21 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
         // toggleMapTheme() // Uncomment to start in dark mode
 
         startMessengerUpdates()
+        startTaskUpdates()
         
         map.setOnMarkerClickListener { marker ->
             val messenger = marker.tag as? Messenger
             if (messenger != null) {
                 showMessengerDetails(messenger)
+                return@setOnMarkerClickListener false
             }
+            
+            val task = marker.tag as? Task
+            if (task != null) {
+                showTaskDetails(task)
+                return@setOnMarkerClickListener false
+            }
+            
             false
         }
     }
@@ -111,8 +143,9 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
     private fun startMessengerUpdates() {
         messengerJob?.cancel()
         messengerJob = CoroutineScope(Dispatchers.IO).launch {
+            val locationRepository = LocationRepository(this@MainActivity)
             while (true) {
-                val messengers = LocationRepository.getMessengers()
+                val messengers = locationRepository.getMessengers()
                 withContext(Dispatchers.Main) {
                     updateMessengerMarkers(messengers)
                 }
@@ -161,9 +194,86 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
             .show()
     }
 
+    private fun startTaskUpdates() {
+        taskJob?.cancel()
+        taskJob = CoroutineScope(Dispatchers.IO).launch {
+            val taskRepository = TaskRepository(this@MainActivity)
+            while (true) {
+                val tasks = taskRepository.getMyTasks()
+                withContext(Dispatchers.Main) {
+                    updateTaskMarkers(tasks)
+                }
+                delay(1800000) // 30 minutes = 1800000 ms
+            }
+        }
+    }
+
+    private fun updateTaskMarkers(tasks: List<Task>) {
+        // Remove all existing task markers
+        taskMarkers.values.forEach { it.remove() }
+        taskMarkers.clear()
+        
+        // Add new task markers (exclude completed tasks)
+        for (task in tasks) {
+            // Skip completed tasks
+            if (task.estadoTarea.nombre.uppercase() == "COMPLETADA") {
+                continue
+            }
+            
+            val position = LatLng(task.cliente.latitud, task.cliente.longitud)
+            val markerColor = getTaskMarkerColor(task.estadoTarea.nombre)
+            
+            val marker = map.addMarker(
+                MarkerOptions()
+                    .position(position)
+                    .title("[${task.codigo}] ${task.nombre}")
+                    .snippet("${task.cliente.nombre} - ${task.tipoOperacion.nombre}")
+                    .icon(BitmapDescriptorFactory.defaultMarker(markerColor))
+            )
+            
+            if (marker != null) {
+                marker.tag = task
+                taskMarkers[task.idTarea] = marker
+            }
+        }
+    }
+
+    private fun getTaskMarkerColor(estado: String): Float {
+        return when (estado.uppercase()) {
+            "CREADA" -> BitmapDescriptorFactory.HUE_GREEN
+            "EN_PROCESO", "EN PROCESO" -> BitmapDescriptorFactory.HUE_YELLOW
+            "CANCELADA" -> BitmapDescriptorFactory.HUE_AZURE // Gray-ish
+            else -> BitmapDescriptorFactory.HUE_ORANGE
+        }
+    }
+
+    private fun showTaskDetails(task: Task) {
+        val message = buildString {
+            append("Código: ${task.codigo}\n\n")
+            append("${task.nombre}\n\n")
+            append("Cliente: ${task.cliente.nombre}\n")
+            append("Dirección: ${task.cliente.direccion}\n")
+            append("Teléfono: ${task.cliente.telefono}\n\n")
+            append("Tipo: ${task.tipoOperacion.nombre}\n")
+            append("Categoría: ${task.categoria.nombre}\n")
+            append("Estado: ${task.estadoTarea.nombre}\n\n")
+            append("Fecha límite: ${task.fechaLimite}\n")
+            if (!task.comentario.isNullOrEmpty()) {
+                append("\nComentario: ${task.comentario}")
+            }
+        }
+
+        androidx.appcompat.app.AlertDialog.Builder(this)
+            .setTitle("Detalles de Tarea")
+            .setMessage(message)
+            .setPositiveButton("OK", null)
+            .show()
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         messengerJob?.cancel()
+        taskJob?.cancel()
     }
 
     private fun enableMyLocation() {
@@ -232,18 +342,37 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
         }
     }
 
+    private fun updateNavigationHeader(navView: NavigationView) {
+        val headerView = navView.getHeaderView(0)
+        val tvUserFullName = headerView.findViewById<TextView>(R.id.tvUserFullName)
+        val tvUsername = headerView.findViewById<TextView>(R.id.tvUsername)
+        
+        tvUserFullName.text = sessionManager.getNombreCompleto()
+        tvUsername.text = "@${sessionManager.getUsername()}"
+    }
+    
+    private fun navigateToLogin() {
+        val intent = Intent(this, LoginActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        startActivity(intent)
+        finish()
+    }
+
     override fun onNavigationItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.nav_home -> {
                 // Handle Home
             }
+            R.id.nav_tasks -> {
+                val intent = Intent(this, TasksActivity::class.java)
+                startActivity(intent)
+            }
             R.id.nav_deliveries -> {
                 // Handle Deliveries
             }
             R.id.nav_logout -> {
-                val intent = Intent(this, LoginActivity::class.java)
-                startActivity(intent)
-                finish()
+                sessionManager.clearSession()
+                navigateToLogin()
             }
         }
         drawerLayout.closeDrawer(GravityCompat.START)

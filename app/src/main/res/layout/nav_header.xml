@@ -16,11 +16,21 @@
         android:layout_marginBottom="16dp"/>
 
     <TextView
+        android:id="@+id/tvUserFullName"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Soprint EC"
         android:textColor="@color/white"
         android:textSize="20sp"
         android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/tvUsername"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text=""
+        android:textColor="@color/white"
+        android:textSize="14sp"
+        android:layout_marginTop="4dp" />
 
 </LinearLayout>

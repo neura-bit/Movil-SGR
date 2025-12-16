@@ -20,16 +20,18 @@ class LocationService : Service() {
 
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var locationCallback: LocationCallback
+    private lateinit var locationRepository: LocationRepository
 
     override fun onCreate() {
         super.onCreate()
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+        locationRepository = LocationRepository(this)
 
         locationCallback = object : LocationCallback() {
             override fun onLocationResult(locationResult: LocationResult) {
                 for (location in locationResult.locations) {
                     CoroutineScope(Dispatchers.IO).launch {
-                        LocationRepository.sendLocation(location.latitude, location.longitude)
+                        locationRepository.sendLocation(location.latitude, location.longitude)
                     }
                 }
             }

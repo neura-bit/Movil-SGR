@@ -22,9 +22,16 @@ data class Messenger(
 )
 
 interface LocationApi {
+    @POST("api/auth/login")
+    suspend fun login(@Body request: LoginRequest): Response<LoginResponse>
+
     @POST("api/tracking/posicion")
     suspend fun updateLocation(@Body request: LocationRequest): Response<Void>
 
     @retrofit2.http.GET("api/tracking/mensajeros-actual")
     suspend fun getActiveMessengers(): Response<List<Messenger>>
+
+    @retrofit2.http.GET("api/tareas/mis-tareas")
+    suspend fun getMyTasks(): Response<List<Task>>
 }
+

@@ -6,6 +6,10 @@
             android:icon="@drawable/ic_launcher_foreground"
             android:title="Inicio" />
         <item
+            android:id="@+id/nav_tasks"
+            android:icon="@drawable/ic_launcher_foreground"
+            android:title="Mis Tareas" />
+        <item
             android:id="@+id/nav_deliveries"
             android:icon="@drawable/ic_launcher_foreground"
             android:title="Entregas" />
@@ -15,3 +19,4 @@
         android:icon="@drawable/ic_lock"
         android:title="Cerrar Sesión" />
 </menu>
+

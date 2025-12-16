@@ -1,17 +1,28 @@
 package com.example.soprintsgr.data
 
+import android.content.Context
 import android.util.Log
 import com.example.soprintsgr.data.api.LocationRequest
 import com.example.soprintsgr.data.api.Messenger
 import com.example.soprintsgr.data.api.RetrofitClient
 
-object LocationRepository {
-    private const val TAG = "LocationRepository"
+class LocationRepository(context: Context) {
+    private val sessionManager = SessionManager(context)
+    
+    companion object {
+        private const val TAG = "LocationRepository"
+    }
 
     suspend fun sendLocation(latitude: Double, longitude: Double) {
         try {
+            val idMensajero = sessionManager.getIdUsuario()
+            if (idMensajero == -1) {
+                Log.e(TAG, "No user logged in, cannot send location")
+                return
+            }
+            
             val request = LocationRequest(
-                idMensajero = 8,
+                idMensajero = idMensajero,
                 idTarea = 1,
                 latitud = latitude,
                 longitud = longitude
