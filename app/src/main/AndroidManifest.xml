@@ -46,6 +46,10 @@
             android:name=".ui.tasks.TasksActivity"
             android:exported="false"
             android:parentActivityName=".MainActivity" />
+        <activity
+            android:name=".ui.completed.CompletedTasksActivity"
+            android:exported="false"
+            android:parentActivityName=".MainActivity" />
     </application>
 
 </manifest>

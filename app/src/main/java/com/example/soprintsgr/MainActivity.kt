@@ -109,6 +109,12 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
             toggleMapTheme()
         }
 
+        // Setup Center Location FAB
+        val fabCenterLocation: FloatingActionButton = findViewById(R.id.fab_center_location)
+        fabCenterLocation.setOnClickListener {
+            centerOnMyLocation()
+        }
+
         checkPermissionsAndStartService()
     }
 
@@ -117,8 +123,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
         enableMyLocation()
         getDeviceLocation()
         
-        // Default to dark theme if preferred, or just standard
-        // toggleMapTheme() // Uncomment to start in dark mode
+        // Apply clean map style by default (removes POIs and clutter)
+        applyCleanMapStyle()
 
         startMessengerUpdates()
         startTaskUpdates()
@@ -141,6 +147,13 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
     }
 
     private fun startMessengerUpdates() {
+        // Only show other messengers for ADMIN and ASESOR roles
+        val userRole = sessionManager.getRol()
+        if (userRole == "MENSAJERO") {
+            // Messengers should not see other messengers, only their own location
+            return
+        }
+        
         messengerJob?.cancel()
         messengerJob = CoroutineScope(Dispatchers.IO).launch {
             val locationRepository = LocationRepository(this@MainActivity)
@@ -213,6 +226,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
         taskMarkers.values.forEach { it.remove() }
         taskMarkers.clear()
         
+        val activeTasks = mutableListOf<Task>()
+        
         // Add new task markers (exclude completed tasks)
         for (task in tasks) {
             // Skip completed tasks
@@ -220,21 +235,43 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
                 continue
             }
             
+            activeTasks.add(task)
+            
             val position = LatLng(task.cliente.latitud, task.cliente.longitud)
-            val markerColor = getTaskMarkerColor(task.estadoTarea.nombre)
+            
+            // Use custom icon for task markers (scaled to 4% = 96% smaller)
+            val icon = try {
+                val bitmap = android.graphics.BitmapFactory.decodeResource(resources, R.drawable.icon)
+                val scaledBitmap = android.graphics.Bitmap.createScaledBitmap(
+                    bitmap,
+                    (bitmap.width * 0.04).toInt(),
+                    (bitmap.height * 0.04).toInt(),
+                    false
+                )
+                BitmapDescriptorFactory.fromBitmap(scaledBitmap)
+            } catch (e: Exception) {
+                // Fallback to colored markers if icon not found
+                val markerColor = getTaskMarkerColor(task.estadoTarea.nombre)
+                BitmapDescriptorFactory.defaultMarker(markerColor)
+            }
             
             val marker = map.addMarker(
                 MarkerOptions()
                     .position(position)
-                    .title("[${task.codigo}] ${task.nombre}")
+                    .title("${task.nombre}")
                     .snippet("${task.cliente.nombre} - ${task.tipoOperacion.nombre}")
-                    .icon(BitmapDescriptorFactory.defaultMarker(markerColor))
+                    .icon(icon)
             )
             
             if (marker != null) {
                 marker.tag = task
                 taskMarkers[task.idTarea] = marker
             }
+        }
+        
+        // Center camera on nearest task on first load
+        if (activeTasks.isNotEmpty() && taskMarkers.size == activeTasks.size) {
+            centerOnNearestTask(activeTasks)
         }
     }
 
@@ -247,27 +284,137 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
         }
     }
 
-    private fun showTaskDetails(task: Task) {
-        val message = buildString {
-            append("Código: ${task.codigo}\n\n")
-            append("${task.nombre}\n\n")
-            append("Cliente: ${task.cliente.nombre}\n")
-            append("Dirección: ${task.cliente.direccion}\n")
-            append("Teléfono: ${task.cliente.telefono}\n\n")
-            append("Tipo: ${task.tipoOperacion.nombre}\n")
-            append("Categoría: ${task.categoria.nombre}\n")
-            append("Estado: ${task.estadoTarea.nombre}\n\n")
-            append("Fecha límite: ${task.fechaLimite}\n")
-            if (!task.comentario.isNullOrEmpty()) {
-                append("\nComentario: ${task.comentario}")
+    private fun centerOnNearestTask(tasks: List<Task>) {
+        try {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
+                ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+            ) {
+                fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+                    if (location != null) {
+                        val currentLatLng = LatLng(location.latitude, location.longitude)
+                        
+                        // Find nearest task
+                        var nearestTask: Task? = null
+                        var minDistance = Float.MAX_VALUE
+                        
+                        for (task in tasks) {
+                            val taskLatLng = LatLng(task.cliente.latitud, task.cliente.longitud)
+                            val results = FloatArray(1)
+                            android.location.Location.distanceBetween(
+                                currentLatLng.latitude, currentLatLng.longitude,
+                                taskLatLng.latitude, taskLatLng.longitude,
+                                results
+                            )
+                            
+                            if (results[0] < minDistance) {
+                                minDistance = results[0]
+                                nearestTask = task
+                            }
+                        }
+                        
+                        // Center camera to show both current location and nearest task
+                        nearestTask?.let {
+                            val taskPosition = LatLng(it.cliente.latitud, it.cliente.longitud)
+                            
+                            // Create bounds that include both points
+                            val boundsBuilder = com.google.android.gms.maps.model.LatLngBounds.Builder()
+                            boundsBuilder.include(currentLatLng)
+                            boundsBuilder.include(taskPosition)
+                            val bounds = boundsBuilder.build()
+                            
+                            // Add more padding for better centering (not at corners)
+                            val padding = 400 // padding in pixels
+                            val cameraUpdate = CameraUpdateFactory.newLatLngBounds(bounds, padding)
+                            map.animateCamera(cameraUpdate)
+                        }
+                    }
+                }
             }
+        } catch (e: SecurityException) {
+            // Log error
         }
+    }
 
-        androidx.appcompat.app.AlertDialog.Builder(this)
-            .setTitle("Detalles de Tarea")
-            .setMessage(message)
-            .setPositiveButton("OK", null)
-            .show()
+    private fun showTaskDetails(task: Task) {
+        // Inflate the custom layout
+        val dialogView = layoutInflater.inflate(R.layout.dialog_task_details, null)
+        
+        // Bind data to views
+        val tvTaskTitle = dialogView.findViewById<TextView>(R.id.tvTaskTitle)
+        val tvTaskEstado = dialogView.findViewById<TextView>(R.id.tvTaskEstado)
+        val tvClienteNombre = dialogView.findViewById<TextView>(R.id.tvClienteNombre)
+        val tvClienteDireccion = dialogView.findViewById<TextView>(R.id.tvClienteDireccion)
+        val tvClienteTelefono = dialogView.findViewById<TextView>(R.id.tvClienteTelefono)
+        val btnCallPhone = dialogView.findViewById<android.widget.ImageButton>(R.id.btnCallPhone)
+        val tvTipoOperacion = dialogView.findViewById<TextView>(R.id.tvTipoOperacion)
+        val tvCategoria = dialogView.findViewById<TextView>(R.id.tvCategoria)
+        val tvFechaLimite = dialogView.findViewById<TextView>(R.id.tvFechaLimite)
+        val layoutComentario = dialogView.findViewById<View>(R.id.layoutComentario)
+        val tvComentario = dialogView.findViewById<TextView>(R.id.tvComentario)
+        val btnOpenMap = dialogView.findViewById<com.google.android.material.button.MaterialButton>(R.id.btnOpenMap)
+        val btnFinalizar = dialogView.findViewById<com.google.android.material.button.MaterialButton>(R.id.btnFinalizar)
+        
+        // Set task data
+        tvTaskTitle.text = task.nombre
+        tvTaskEstado.text = task.estadoTarea.nombre
+        
+        // Set estado background color
+        tvTaskEstado.setBackgroundColor(getTaskEstadoColor(task.estadoTarea.nombre))
+        
+        // Set cliente data
+        tvClienteNombre.text = task.cliente.nombre
+        tvClienteDireccion.text = task.cliente.direccion
+        tvClienteTelefono.text = task.cliente.telefono
+        
+        // Set task details
+        tvTipoOperacion.text = task.tipoOperacion.nombre
+        tvCategoria.text = task.categoria.nombre
+        tvFechaLimite.text = task.fechaLimite
+        
+        // Show comentario if exists
+        if (!task.comentario.isNullOrEmpty()) {
+            layoutComentario.visibility = View.VISIBLE
+            tvComentario.text = task.comentario
+        } else {
+            layoutComentario.visibility = View.GONE
+        }
+        
+        // Create dialog first
+        val dialog = androidx.appcompat.app.AlertDialog.Builder(this)
+            .setView(dialogView)
+            .setPositiveButton("Cerrar", null)
+            .create()
+        
+        // Set phone call click listener
+        btnCallPhone.setOnClickListener {
+            val intent = Intent(Intent.ACTION_DIAL)
+            intent.data = android.net.Uri.parse("tel:${task.cliente.telefono}")
+            startActivity(intent)
+        }
+        
+        // Set open map click listener - center on task location
+        btnOpenMap.setOnClickListener {
+            val position = LatLng(task.cliente.latitud, task.cliente.longitud)
+            map.animateCamera(CameraUpdateFactory.newLatLngZoom(position, 17f))
+            dialog.dismiss()
+        }
+        
+        // Hide finalizar button in map view (only show in TasksActivity)
+        btnFinalizar.visibility = View.GONE
+        
+        // Show dialog
+        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+        dialog.show()
+    }
+
+    private fun getTaskEstadoColor(estado: String): Int {
+        return when (estado.uppercase()) {
+            "CREADA" -> android.graphics.Color.parseColor("#4CAF50") // Green
+            "EN_PROCESO", "EN PROCESO" -> android.graphics.Color.parseColor("#FF9800") // Orange
+            "COMPLETADA" -> android.graphics.Color.parseColor("#2196F3") // Blue
+            "CANCELADA" -> android.graphics.Color.parseColor("#9E9E9E") // Gray
+            else -> android.graphics.Color.parseColor("#607D8B") // Default gray
+        }
     }
 
     override fun onDestroy() {
@@ -282,7 +429,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
         ) {
             if (::map.isInitialized) {
                 map.isMyLocationEnabled = true
-                map.uiSettings.isMyLocationButtonEnabled = false // We will use our own logic or rely on auto-center
+                map.uiSettings.isMyLocationButtonEnabled = true // Enable location button
             }
         }
     }
@@ -302,7 +449,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
                                     LatLng(lastKnownLocation.latitude, lastKnownLocation.longitude), 15f
                                 )
                             )
-                            updateLocationStatus(lastKnownLocation.latitude, lastKnownLocation.longitude)
                         }
                     } else {
                         map.moveCamera(CameraUpdateFactory.newLatLngZoom(LatLng(-0.1807, -78.4678), 15f)) // Default to Quito
@@ -315,9 +461,23 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
         }
     }
 
-    private fun updateLocationStatus(lat: Double, lon: Double) {
-        val tvLocationStatus: TextView = findViewById(R.id.tv_location_status)
-        tvLocationStatus.text = "Ubicación: $lat, $lon"
+
+
+    private fun applyCleanMapStyle() {
+        if (!::map.isInitialized) return
+
+        try {
+            val success = map.setMapStyle(
+                MapStyleOptions.loadRawResourceStyle(
+                    this, R.raw.map_style_clean
+                )
+            )
+            if (!success) {
+                // Log error - style couldn't be applied
+            }
+        } catch (e: Exception) {
+            // Log error - exception loading style
+        }
     }
 
     private fun toggleMapTheme() {
@@ -338,7 +498,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
                 // Log error
             }
         } else {
-            map.setMapStyle(null) // Reset to standard style
+            // Apply clean style instead of default
+            applyCleanMapStyle()
         }
     }
 
@@ -358,6 +519,25 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
         finish()
     }
 
+    private fun centerOnMyLocation() {
+        if (!::map.isInitialized) return
+        
+        try {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
+                ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+            ) {
+                fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+                    if (location != null) {
+                        val currentLatLng = LatLng(location.latitude, location.longitude)
+                        map.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 16f))
+                    }
+                }
+            }
+        } catch (e: SecurityException) {
+            // Log error
+        }
+    }
+
     override fun onNavigationItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.nav_home -> {
@@ -368,7 +548,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
                 startActivity(intent)
             }
             R.id.nav_deliveries -> {
-                // Handle Deliveries
+                val intent = Intent(this, com.example.soprintsgr.ui.completed.CompletedTasksActivity::class.java)
+                startActivity(intent)
             }
             R.id.nav_logout -> {
                 sessionManager.clearSession()

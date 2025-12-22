@@ -21,6 +21,17 @@ data class Messenger(
     val fechaUltimaActualizacion: String
 )
 
+data class FinalizarSinCodigoRequest(
+    val idEstadoTarea: Int,
+    val observacion: String
+)
+
+data class FinalizarConCodigoRequest(
+    val codigo: String,
+    val idEstadoTarea: Int,
+    val observacion: String
+)
+
 interface LocationApi {
     @POST("api/auth/login")
     suspend fun login(@Body request: LoginRequest): Response<LoginResponse>
@@ -33,5 +44,23 @@ interface LocationApi {
 
     @retrofit2.http.GET("api/tareas/mis-tareas")
     suspend fun getMyTasks(): Response<List<Task>>
+
+    @retrofit2.http.PUT("api/tareas/{idTarea}/finalizar-sin-codigo")
+    suspend fun finalizarTareaSinCodigo(
+        @retrofit2.http.Path("idTarea") idTarea: Int,
+        @Body request: FinalizarSinCodigoRequest
+    ): Response<Task>
+
+    @retrofit2.http.PUT("api/tareas/{idTarea}/finalizar")
+    suspend fun finalizarTareaConCodigo(
+        @retrofit2.http.Path("idTarea") idTarea: Int,
+        @Body request: FinalizarConCodigoRequest
+    ): Response<Task>
+
+    @retrofit2.http.GET("api/tareas/mis-tareas-completadas")
+    suspend fun getCompletedTasks(
+        @retrofit2.http.Query("fechaInicio") fechaInicio: String,
+        @retrofit2.http.Query("fechaFin") fechaFin: String
+    ): Response<List<Task>>
 }
 
