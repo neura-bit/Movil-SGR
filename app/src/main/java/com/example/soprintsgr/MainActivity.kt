@@ -23,6 +23,7 @@ import com.example.soprintsgr.data.api.RetrofitClient
 import com.example.soprintsgr.data.api.Task
 import com.example.soprintsgr.ui.login.LoginActivity
 import com.example.soprintsgr.ui.tasks.TasksActivity
+import com.example.soprintsgr.ui.tasks.TaskInProgressActivity
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -56,6 +57,9 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
     private var taskJob: Job? = null
     private val messengerMarkers = mutableMapOf<Int, Marker>()
     private val taskMarkers = mutableMapOf<Int, Marker>()
+    private lateinit var activeTaskManager: com.example.soprintsgr.data.ActiveTaskManager
+    private var bannerTimerJob: Job? = null
+    private var bannerView: View? = null
 
     private val requestPermissionLauncher =
         registerForActivityResult(
@@ -70,6 +74,15 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
                 getDeviceLocation()
             }
         }
+    
+    private val taskCompletedReceiver = object : android.content.BroadcastReceiver() {
+        override fun onReceive(context: android.content.Context?, intent: Intent?) {
+            if (intent?.action == "com.example.soprintsgr.TASK_COMPLETED") {
+                // Refresh task markers immediately
+                refreshTaskMarkers()
+            }
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -85,6 +98,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
         }
         
         setContentView(R.layout.activity_main)
+
+        activeTaskManager = com.example.soprintsgr.data.ActiveTaskManager.getInstance(this)
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
         drawerLayout = findViewById(R.id.drawer_layout)
@@ -116,6 +131,94 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
         }
 
         checkPermissionsAndStartService()
+        setupActiveTaskBanner()
+        
+        // Register broadcast receiver for task completion
+        val filter = android.content.IntentFilter("com.example.soprintsgr.TASK_COMPLETED")
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(taskCompletedReceiver, filter, android.content.Context.RECEIVER_NOT_EXPORTED)
+        } else {
+            registerReceiver(taskCompletedReceiver, filter)
+        }
+    }
+
+    private fun setupActiveTaskBanner() {
+        if (activeTaskManager.hasActiveTask()) {
+            showActiveTaskBanner()
+        }
+    }
+
+    private fun showActiveTaskBanner() {
+        val bannerContainer = findViewById<android.widget.FrameLayout>(R.id.activeTaskBannerContainer)
+        
+        if (bannerView == null) {
+            bannerView = layoutInflater.inflate(R.layout.banner_active_task, bannerContainer, false)
+            bannerContainer.addView(bannerView)
+            
+            bannerView?.setOnClickListener {
+                val intent = Intent(this, TaskInProgressActivity::class.java)
+                startActivity(intent)
+            }
+        }
+        
+        bannerContainer.visibility = View.VISIBLE
+        updateBannerInfo()
+        startBannerTimerUpdates()
+    }
+
+    private fun updateBannerInfo() {
+        val task = activeTaskManager.getActiveTask() ?: return
+        
+        bannerView?.let { banner ->
+            val tvBannerTaskName = banner.findViewById<TextView>(R.id.tvBannerTaskName)
+            val tvBannerClientName = banner.findViewById<TextView>(R.id.tvBannerClientName)
+            
+            tvBannerTaskName?.text = task.nombre
+            tvBannerClientName?.text = task.cliente.nombre
+        }
+    }
+
+    private fun startBannerTimerUpdates() {
+        bannerTimerJob?.cancel()
+        bannerTimerJob = CoroutineScope(Dispatchers.Main).launch {
+            while (true) {
+                updateBannerTimer()
+                delay(1000) // Update every second
+            }
+        }
+    }
+
+    private fun updateBannerTimer() {
+        if (!activeTaskManager.hasActiveTask()) {
+            hideActiveTaskBanner()
+            return
+        }
+        
+        val elapsedMillis = activeTaskManager.getElapsedTime()
+        val hours = java.util.concurrent.TimeUnit.MILLISECONDS.toHours(elapsedMillis)
+        val minutes = java.util.concurrent.TimeUnit.MILLISECONDS.toMinutes(elapsedMillis) % 60
+        val seconds = java.util.concurrent.TimeUnit.MILLISECONDS.toSeconds(elapsedMillis) % 60
+        
+        bannerView?.let { banner ->
+            val tvBannerTimer = banner.findViewById<TextView>(R.id.tvBannerTimer)
+            tvBannerTimer?.text = String.format("%02d:%02d:%02d", hours, minutes, seconds)
+        }
+    }
+
+    private fun hideActiveTaskBanner() {
+        val bannerContainer = findViewById<android.widget.FrameLayout>(R.id.activeTaskBannerContainer)
+        bannerContainer.visibility = View.GONE
+        bannerTimerJob?.cancel()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Check if task is still active when returning to MainActivity
+        if (activeTaskManager.hasActiveTask()) {
+            showActiveTaskBanner()
+        } else {
+            hideActiveTaskBanner()
+        }
     }
 
     override fun onMapReady(googleMap: GoogleMap) {
@@ -207,7 +310,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
             .show()
     }
 
-    private fun startTaskUpdates() {
+    fun startTaskUpdates() {
         taskJob?.cancel()
         taskJob = CoroutineScope(Dispatchers.IO).launch {
             val taskRepository = TaskRepository(this@MainActivity)
@@ -216,7 +319,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
                 withContext(Dispatchers.Main) {
                     updateTaskMarkers(tasks)
                 }
-                delay(1800000) // 30 minutes = 1800000 ms
+                delay(600000) // 10 minutes = 600000 ms
             }
         }
     }
@@ -417,10 +520,26 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
         }
     }
 
+    private fun refreshTaskMarkers() {
+        CoroutineScope(Dispatchers.IO).launch {
+            val taskRepository = TaskRepository(this@MainActivity)
+            val tasks = taskRepository.getMyTasks()
+            withContext(Dispatchers.Main) {
+                updateTaskMarkers(tasks)
+            }
+        }
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         messengerJob?.cancel()
         taskJob?.cancel()
+        bannerTimerJob?.cancel()
+        try {
+            unregisterReceiver(taskCompletedReceiver)
+        } catch (e: Exception) {
+            // Receiver not registered
+        }
     }
 
     private fun enableMyLocation() {

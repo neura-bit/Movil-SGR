@@ -29,6 +29,27 @@ class TaskRepository(context: Context) {
         }
     }
 
+    suspend fun iniciarTarea(idTarea: Int): Result<Task> {
+        return try {
+            val response = RetrofitClient.api.iniciarTarea(idTarea)
+            if (response.isSuccessful && response.body() != null) {
+                Log.d(TAG, "Tarea $idTarea iniciada exitosamente")
+                Result.success(response.body()!!)
+            } else {
+                val errorMsg = "Error al iniciar tarea: ${response.code()}"
+                Log.e(TAG, errorMsg)
+                Result.failure(Exception(errorMsg))
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error iniciando tarea", e)
+            Result.failure(e)
+        }
+    }
+
+    fun hasActiveTask(tasks: List<Task>): Task? {
+        return tasks.find { it.estadoTarea.idEstadoTarea == 2 } // 2 = EN PROCESO
+    }
+
     suspend fun finalizarTareaSinCodigo(idTarea: Int, observacion: String): Result<Task> {
         return try {
             val request = com.example.soprintsgr.data.api.FinalizarSinCodigoRequest(

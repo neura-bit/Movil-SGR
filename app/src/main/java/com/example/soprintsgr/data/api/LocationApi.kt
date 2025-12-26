@@ -6,7 +6,7 @@ import retrofit2.http.POST
 
 data class LocationRequest(
     val idMensajero: Int,
-    val idTarea: Int,
+    val idTarea: Int?,  // Nullable para cuando no hay tarea activa
     val latitud: Double,
     val longitud: Double
 )
@@ -32,6 +32,10 @@ data class FinalizarConCodigoRequest(
     val observacion: String
 )
 
+data class IniciarTareaRequest(
+    val idEstadoTarea: Int = 2 // EN PROCESO
+)
+
 interface LocationApi {
     @POST("api/auth/login")
     suspend fun login(@Body request: LoginRequest): Response<LoginResponse>
@@ -44,6 +48,11 @@ interface LocationApi {
 
     @retrofit2.http.GET("api/tareas/mis-tareas")
     suspend fun getMyTasks(): Response<List<Task>>
+
+    @retrofit2.http.PUT("api/tareas/{idTarea}/iniciar")
+    suspend fun iniciarTarea(
+        @retrofit2.http.Path("idTarea") idTarea: Int
+    ): Response<Task>
 
     @retrofit2.http.PUT("api/tareas/{idTarea}/finalizar-sin-codigo")
     suspend fun finalizarTareaSinCodigo(

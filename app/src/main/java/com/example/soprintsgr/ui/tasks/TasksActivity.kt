@@ -24,6 +24,7 @@ class TasksActivity : AppCompatActivity() {
     private lateinit var progressBar: ProgressBar
     private lateinit var tvEmptyState: TextView
     private lateinit var taskRepository: TaskRepository
+    private lateinit var activeTaskManager: com.example.soprintsgr.data.ActiveTaskManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,6 +36,7 @@ class TasksActivity : AppCompatActivity() {
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         
         taskRepository = TaskRepository(this)
+        activeTaskManager = com.example.soprintsgr.data.ActiveTaskManager.getInstance(this)
         
         recyclerView = findViewById(R.id.recyclerViewTasks)
         swipeRefreshLayout = findViewById(R.id.swipeRefreshLayout)
@@ -66,6 +68,17 @@ class TasksActivity : AppCompatActivity() {
             try {
                 showLoading(true)
                 val tasks = taskRepository.getMyTasks()
+                
+                // Check if there's an active task (EN PROCESO)
+                val activeTask = taskRepository.hasActiveTask(tasks)
+                if (activeTask != null) {
+                    // Update task data without changing the timestamp to preserve timer
+                    activeTaskManager.updateTaskData(activeTask)
+                    val intent = Intent(this@TasksActivity, TaskInProgressActivity::class.java)
+                    startActivity(intent)
+                    finish()
+                    return@launch
+                }
                 
                 if (tasks.isEmpty()) {
                     showEmptyState(true)
@@ -99,6 +112,7 @@ class TasksActivity : AppCompatActivity() {
         val layoutComentario = dialogView.findViewById<View>(R.id.layoutComentario)
         val tvComentario = dialogView.findViewById<TextView>(R.id.tvComentario)
         val btnOpenMap = dialogView.findViewById<com.google.android.material.button.MaterialButton>(R.id.btnOpenMap)
+        val btnIniciarTarea = dialogView.findViewById<com.google.android.material.button.MaterialButton>(R.id.btnIniciarTarea)
         val btnFinalizar = dialogView.findViewById<com.google.android.material.button.MaterialButton>(R.id.btnFinalizar)
         
         // Set task data
@@ -144,16 +158,35 @@ class TasksActivity : AppCompatActivity() {
             openInMaps(task.cliente.latitud, task.cliente.longitud)
         }
         
-        // Show/hide finalizar button based on task status
+        // Show appropriate button based on task status
+        val isEnProceso = task.estadoTarea.idEstadoTarea == 2
+        val isCreada = task.estadoTarea.idEstadoTarea == 1
         val canFinalize = task.estadoTarea.nombre !in listOf("COMPLETADA", "CANCELADA")
-        if (canFinalize) {
-            btnFinalizar.visibility = View.VISIBLE
-            btnFinalizar.setOnClickListener {
-                dialog.dismiss()
-                showFinalizarDialog(task)
+        
+        when {
+            isEnProceso -> {
+                // Task is in progress, show finalizar button
+                btnIniciarTarea.visibility = View.GONE
+                btnFinalizar.visibility = View.VISIBLE
+                btnFinalizar.setOnClickListener {
+                    dialog.dismiss()
+                    showFinalizarDialog(task)
+                }
             }
-        } else {
-            btnFinalizar.visibility = View.GONE
+            isCreada -> {
+                // Task is created, show iniciar button
+                btnIniciarTarea.visibility = View.VISIBLE
+                btnFinalizar.visibility = View.GONE
+                btnIniciarTarea.setOnClickListener {
+                    dialog.dismiss()
+                    iniciarTarea(task)
+                }
+            }
+            else -> {
+                // Task is completed or cancelled
+                btnIniciarTarea.visibility = View.GONE
+                btnFinalizar.visibility = View.GONE
+            }
         }
         
         // Show dialog
@@ -171,13 +204,74 @@ class TasksActivity : AppCompatActivity() {
         }
     }
 
+    private fun iniciarTarea(task: Task) {
+        lifecycleScope.launch {
+            try {
+                // Check if there's already an active task
+                if (activeTaskManager.hasActiveTask()) {
+                    android.widget.Toast.makeText(
+                        this@TasksActivity,
+                        "Ya tienes una tarea en proceso. Finalízala antes de iniciar otra.",
+                        android.widget.Toast.LENGTH_LONG
+                    ).show()
+                    return@launch
+                }
+
+                // Show loading
+                val progressDialog = android.app.ProgressDialog.show(
+                    this@TasksActivity,
+                    "Iniciando tarea",
+                    "Por favor espera...",
+                    true
+                )
+
+                val result = taskRepository.iniciarTarea(task.idTarea)
+
+                progressDialog.dismiss()
+
+                if (result.isSuccess) {
+                    val updatedTask = result.getOrNull()!!
+                    activeTaskManager.startTask(updatedTask)
+
+                    android.widget.Toast.makeText(
+                        this@TasksActivity,
+                        "Tarea iniciada exitosamente",
+                        android.widget.Toast.LENGTH_SHORT
+                    ).show()
+
+                    // Navigate to TaskInProgressActivity
+                    val intent = Intent(this@TasksActivity, TaskInProgressActivity::class.java)
+                    startActivity(intent)
+                    finish()
+                } else {
+                    android.widget.Toast.makeText(
+                        this@TasksActivity,
+                        "Error al iniciar tarea: ${result.exceptionOrNull()?.message}",
+                        android.widget.Toast.LENGTH_LONG
+                    ).show()
+                }
+            } catch (e: Exception) {
+                android.widget.Toast.makeText(
+                    this@TasksActivity,
+                    "Error: ${e.message}",
+                    android.widget.Toast.LENGTH_LONG
+                ).show()
+            }
+        }
+    }
+
     private fun showFinalizarDialog(task: Task) {
         val dialogView = layoutInflater.inflate(R.layout.dialog_finalizar_tarea, null)
         
-        val tilCodigo = dialogView.findViewById<com.google.android.material.textfield.TextInputLayout>(R.id.tilCodigo)
-        val etCodigo = dialogView.findViewById<com.google.android.material.textfield.TextInputEditText>(R.id.etCodigo)
+        // Referencias a las vistas
+        val llCodigoSection = dialogView.findViewById<android.widget.LinearLayout>(R.id.llCodigoSection)
+        val etCode1 = dialogView.findViewById<android.widget.EditText>(R.id.etCode1)
+        val etCode2 = dialogView.findViewById<android.widget.EditText>(R.id.etCode2)
+        val etCode3 = dialogView.findViewById<android.widget.EditText>(R.id.etCode3)
+        val etCode4 = dialogView.findViewById<android.widget.EditText>(R.id.etCode4)
         val etObservacion = dialogView.findViewById<com.google.android.material.textfield.TextInputEditText>(R.id.etObservacion)
         val tvMensajeAyuda = dialogView.findViewById<TextView>(R.id.tvMensajeAyuda)
+        val cvError = dialogView.findViewById<com.google.android.material.card.MaterialCardView>(R.id.cvError)
         val tvError = dialogView.findViewById<TextView>(R.id.tvError)
         val btnCancelar = dialogView.findViewById<com.google.android.material.button.MaterialButton>(R.id.btnCancelar)
         val btnFinalizar = dialogView.findViewById<com.google.android.material.button.MaterialButton>(R.id.btnFinalizar)
@@ -185,10 +279,20 @@ class TasksActivity : AppCompatActivity() {
         // Configure dialog based on task type
         val isEntrega = task.tipoOperacion.nombre.equals("Entrega", ignoreCase = true)
         if (isEntrega) {
-            tilCodigo.visibility = View.VISIBLE
-            tvMensajeAyuda.text = "Solicita el código de verificación al cliente e ingresa la observación."
+            llCodigoSection.visibility = View.VISIBLE
+            tvMensajeAyuda.text = "Solicita el código de verificación de 4 dígitos al cliente e ingresa una observación."
+            
+            // Setup auto-focus entre cajas
+            setupCodeInputs(etCode1, etCode2, etCode3, etCode4)
+            
+            // Focus en la primera caja
+            etCode1.requestFocus()
+            etCode1.postDelayed({
+                val imm = getSystemService(android.content.Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
+                imm.showSoftInput(etCode1, android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT)
+            }, 200)
         } else {
-            tilCodigo.visibility = View.GONE
+            llCodigoSection.visibility = View.GONE
             tvMensajeAyuda.text = "Por favor, ingresa una observación para completar esta tarea."
         }
 
@@ -204,32 +308,78 @@ class TasksActivity : AppCompatActivity() {
         }
 
         btnFinalizar.setOnClickListener {
-            tvError.visibility = View.GONE
+            cvError.visibility = View.GONE
             
             val observacion = etObservacion.text?.toString()?.trim() ?: ""
             
             // Validate observation
             if (observacion.isEmpty()) {
                 tvError.text = "La observación es requerida"
-                tvError.visibility = View.VISIBLE
+                cvError.visibility = View.VISIBLE
                 return@setOnClickListener
             }
 
             // Validate code if it's a delivery task
             if (isEntrega) {
-                val codigo = etCodigo.text?.toString()?.trim() ?: ""
-                if (codigo.isEmpty()) {
-                    tvError.text = "El código de verificación es requerido"
-                    tvError.visibility = View.VISIBLE
+                val code1 = etCode1.text?.toString()?.trim() ?: ""
+                val code2 = etCode2.text?.toString()?.trim() ?: ""
+                val code3 = etCode3.text?.toString()?.trim() ?: ""
+                val code4 = etCode4.text?.toString()?.trim() ?: ""
+                
+                if (code1.isEmpty() || code2.isEmpty() || code3.isEmpty() || code4.isEmpty()) {
+                    tvError.text = "Debes ingresar los 4 dígitos del código de verificación"
+                    cvError.visibility = View.VISIBLE
+                    
+                    // Focus en la primera caja vacía
+                    when {
+                        code1.isEmpty() -> etCode1.requestFocus()
+                        code2.isEmpty() -> etCode2.requestFocus()
+                        code3.isEmpty() -> etCode3.requestFocus()
+                        code4.isEmpty() -> etCode4.requestFocus()
+                    }
                     return@setOnClickListener
                 }
-                finalizarTarea(task, codigo, observacion, btnFinalizar, tvError, dialog)
+                
+                val codigo = "$code1$code2$code3$code4"
+                finalizarTarea(task, codigo, observacion, btnFinalizar, tvError, cvError, dialog)
             } else {
-                finalizarTarea(task, null, observacion, btnFinalizar, tvError, dialog)
+                finalizarTarea(task, null, observacion, btnFinalizar, tvError, cvError, dialog)
             }
         }
 
         dialog.show()
+    }
+    
+    private fun setupCodeInputs(et1: android.widget.EditText, et2: android.widget.EditText, et3: android.widget.EditText, et4: android.widget.EditText) {
+        val editTexts = listOf(et1, et2, et3, et4)
+        
+        editTexts.forEachIndexed { index, editText ->
+            editText.addTextChangedListener(object : android.text.TextWatcher {
+                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+                
+                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+                
+                override fun afterTextChanged(s: android.text.Editable?) {
+                    if (s?.length == 1 && index < editTexts.size - 1) {
+                        // Move to next field
+                        editTexts[index + 1].requestFocus()
+                    }
+                }
+            })
+            
+            // Handle backspace to move to previous field
+            editText.setOnKeyListener { _, keyCode, event ->
+                if (keyCode == android.view.KeyEvent.KEYCODE_DEL && 
+                    event.action == android.view.KeyEvent.ACTION_DOWN &&
+                    editText.text.isEmpty() && index > 0) {
+                    editTexts[index - 1].requestFocus()
+                    editTexts[index - 1].setSelection(editTexts[index - 1].text.length)
+                    true
+                } else {
+                    false
+                }
+            }
+        }
     }
 
     private fun finalizarTarea(
@@ -238,6 +388,7 @@ class TasksActivity : AppCompatActivity() {
         observacion: String,
         btnFinalizar: com.google.android.material.button.MaterialButton,
         tvError: TextView,
+        cvError: com.google.android.material.card.MaterialCardView,
         dialog: AlertDialog
     ) {
         lifecycleScope.launch {
@@ -268,7 +419,7 @@ class TasksActivity : AppCompatActivity() {
                     // Error
                     val errorMessage = result.exceptionOrNull()?.message ?: "Error desconocido"
                     tvError.text = errorMessage
-                    tvError.visibility = View.VISIBLE
+                    cvError.visibility = View.VISIBLE
                     
                     // Reset button state
                     btnFinalizar.isEnabled = true
@@ -277,7 +428,7 @@ class TasksActivity : AppCompatActivity() {
                 }
             } catch (e: Exception) {
                 tvError.text = "Error: ${e.message}"
-                tvError.visibility = View.VISIBLE
+                cvError.visibility = View.VISIBLE
                 
                 // Reset button state
                 btnFinalizar.isEnabled = true

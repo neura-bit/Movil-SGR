@@ -6,7 +6,7 @@ import com.example.soprintsgr.data.api.LocationRequest
 import com.example.soprintsgr.data.api.Messenger
 import com.example.soprintsgr.data.api.RetrofitClient
 
-class LocationRepository(context: Context) {
+class LocationRepository(private val context: Context) {
     private val sessionManager = SessionManager(context)
     
     companion object {
@@ -21,15 +21,24 @@ class LocationRepository(context: Context) {
                 return
             }
             
+            // Get active task ID from ActiveTaskManager
+            val activeTaskManager = ActiveTaskManager.getInstance(context)
+            val activeTask = activeTaskManager.getActiveTask()
+            val idTarea = activeTask?.idTarea
+            
+            if (idTarea == null) {
+                Log.w(TAG, "No active task found, sending location without task ID")
+            }
+            
             val request = LocationRequest(
                 idMensajero = idMensajero,
-                idTarea = 1,
+                idTarea = idTarea,
                 latitud = latitude,
                 longitud = longitude
             )
             val response = RetrofitClient.api.updateLocation(request)
             if (response.isSuccessful) {
-                Log.d(TAG, "Location sent successfully: $latitude, $longitude")
+                Log.d(TAG, "Location sent successfully: $latitude, $longitude (Task ID: $idTarea)")
             } else {
                 Log.e(TAG, "Failed to send location: ${response.code()}")
             }

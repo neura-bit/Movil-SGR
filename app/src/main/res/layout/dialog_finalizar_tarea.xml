@@ -6,11 +6,11 @@
     android:background="@drawable/dialog_background"
     android:orientation="vertical">
 
-    <!-- Header con gradiente -->
+    <!-- Header con gradiente naranja -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@drawable/dialog_header_gradient"
+        android:background="@drawable/gradient_primary"
         android:gravity="center"
         android:orientation="horizontal"
         android:padding="20dp">
@@ -34,82 +34,195 @@
     </LinearLayout>
 
     <!-- Content -->
-    <LinearLayout
+    <ScrollView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="24dp">
+        android:fillViewport="true">
 
-        <!-- Mensaje de ayuda -->
-        <TextView
-            android:id="@+id/tvMensajeAyuda"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            android:text="Por favor, ingresa una observación para completar esta tarea."
-            android:textColor="#666666"
-            android:textSize="14sp" />
+            android:orientation="vertical"
+            android:padding="24dp">
 
-        <!-- Campo de código (visible solo para entregas) -->
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/tilCodigo"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            android:hint="Código de verificación"
-            android:visibility="gone"
-            app:boxStrokeColor="#2196F3"
-            app:endIconMode="clear_text"
-            app:startIconDrawable="@drawable/ic_code"
-            app:startIconTint="#2196F3">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/etCodigo"
+            <!-- Mensaje de ayuda -->
+            <TextView
+                android:id="@+id/tvMensajeAyuda"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="text"
-                android:maxLines="1"
-                android:textColor="@color/black"
-                android:textSize="16sp" />
+                android:layout_marginBottom="20dp"
+                android:text="Por favor, ingresa una observación para completar esta tarea."
+                android:textColor="#666666"
+                android:textSize="14sp"
+                android:lineSpacingExtra="2dp" />
 
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <!-- Campo de observación -->
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/tilObservacion"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Observación"
-            app:boxStrokeColor="#4CAF50"
-            app:endIconMode="clear_text">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/etObservacion"
+            <!-- Sección de código de verificación (visible solo para entregas) -->
+            <LinearLayout
+                android:id="@+id/llCodigoSection"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:gravity="top|start"
-                android:inputType="textMultiLine|textCapSentences"
-                android:lines="4"
-                android:maxLines="6"
-                android:minLines="3"
-                android:textColor="@color/black"
-                android:textSize="16sp" />
+                android:orientation="vertical"
+                android:visibility="gone">
 
-        </com.google.android.material.textfield.TextInputLayout>
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Código de Verificación"
+                    android:textColor="#212121"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="12dp" />
 
-        <!-- Mensaje de error -->
-        <TextView
-            android:id="@+id/tvError"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:textColor="#F44336"
-            android:textSize="14sp"
-            android:visibility="gone" />
+                <!-- Container para las 4 cajas del código -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="24dp">
 
-    </LinearLayout>
+                    <EditText
+                        android:id="@+id/etCode1"
+                        android:layout_width="0dp"
+                        android:layout_height="64dp"
+                        android:layout_weight="1"
+                        android:layout_marginEnd="8dp"
+                        android:background="@drawable/code_box_selector"
+                        android:gravity="center"
+                        android:inputType="number"
+                        android:maxLength="1"
+                        android:textColor="#212121"
+                        android:textSize="24sp"
+                        android:textStyle="bold"
+                        android:importantForAutofill="no" />
+
+                    <EditText
+                        android:id="@+id/etCode2"
+                        android:layout_width="0dp"
+                        android:layout_height="64dp"
+                        android:layout_weight="1"
+                        android:layout_marginEnd="8dp"
+                        android:background="@drawable/code_box_selector"
+                        android:gravity="center"
+                        android:inputType="number"
+                        android:maxLength="1"
+                        android:textColor="#212121"
+                        android:textSize="24sp"
+                        android:textStyle="bold"
+                        android:importantForAutofill="no" />
+
+                    <EditText
+                        android:id="@+id/etCode3"
+                        android:layout_width="0dp"
+                        android:layout_height="64dp"
+                        android:layout_weight="1"
+                        android:layout_marginEnd="8dp"
+                        android:background="@drawable/code_box_selector"
+                        android:gravity="center"
+                        android:inputType="number"
+                        android:maxLength="1"
+                        android:textColor="#212121"
+                        android:textSize="24sp"
+                        android:textStyle="bold"
+                        android:importantForAutofill="no" />
+
+                    <EditText
+                        android:id="@+id/etCode4"
+                        android:layout_width="0dp"
+                        android:layout_height="64dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/code_box_selector"
+                        android:gravity="center"
+                        android:inputType="number"
+                        android:maxLength="1"
+                        android:textColor="#212121"
+                        android:textSize="24sp"
+                        android:textStyle="bold"
+                        android:importantForAutofill="no" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <!-- Campo de observación mejorado -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Observación"
+                android:textColor="#212121"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="12dp" />
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilObservacion"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Escribe aquí tu observación..."
+                app:boxStrokeColor="#FF6B35"
+                app:hintTextColor="#FF6B35"
+                app:endIconMode="clear_text"
+                app:endIconTint="#FF6B35">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etObservacion"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="top|start"
+                    android:inputType="textMultiLine|textCapSentences"
+                    android:lines="4"
+                    android:maxLines="6"
+                    android:minLines="3"
+                    android:textColor="@color/black"
+                    android:textSize="15sp"
+                    android:paddingTop="12dp"
+                    android:paddingBottom="12dp" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Mensaje de error -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cvError"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:visibility="gone"
+                app:cardBackgroundColor="#FFEBEE"
+                app:cardCornerRadius="8dp"
+                app:cardElevation="0dp"
+                app:strokeColor="#F44336"
+                app:strokeWidth="1dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:padding="12dp"
+                    android:gravity="center_vertical">
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:src="@drawable/ic_error"
+                        android:tint="#F44336"
+                        android:layout_marginEnd="8dp" />
+
+                    <TextView
+                        android:id="@+id/tvError"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:textColor="#C62828"
+                        android:textSize="13sp" />
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
+        </LinearLayout>
+
+    </ScrollView>
 
     <!-- Botones de acción -->
     <LinearLayout
@@ -117,31 +230,38 @@
         android:layout_height="wrap_content"
         android:gravity="end"
         android:orientation="horizontal"
-        android:padding="16dp">
+        android:padding="16dp"
+        android:background="#F5F5F5">
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnCancelar"
-            style="@style/Widget.MaterialComponents.Button.TextButton"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="8dp"
-            android:minWidth="100dp"
+            android:layout_height="56dp"
+            android:layout_marginEnd="12dp"
+            android:minWidth="110dp"
             android:text="Cancelar"
             android:textColor="#666666"
-            android:textSize="16sp" />
+            android:textSize="15sp"
+            app:strokeColor="#BDBDBD"
+            app:strokeWidth="1dp"
+            app:cornerRadius="12dp" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnFinalizar"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:backgroundTint="#4CAF50"
-            android:minWidth="120dp"
+            android:layout_height="56dp"
+            android:backgroundTint="#EF6822"
+            android:minWidth="130dp"
             android:text="Finalizar"
             android:textColor="@android:color/white"
-            android:textSize="16sp"
-            app:cornerRadius="8dp"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            app:cornerRadius="12dp"
+            app:elevation="2dp"
             app:icon="@drawable/ic_check_circle"
             app:iconGravity="textStart"
+            app:iconSize="20dp"
             app:iconTint="@android:color/white" />
 
     </LinearLayout>
