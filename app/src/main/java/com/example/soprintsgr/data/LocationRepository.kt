@@ -26,10 +26,6 @@ class LocationRepository(private val context: Context) {
             val activeTask = activeTaskManager.getActiveTask()
             val idTarea = activeTask?.idTarea
             
-            if (idTarea == null) {
-                Log.w(TAG, "No active task found, sending location without task ID")
-            }
-            
             val request = LocationRequest(
                 idMensajero = idMensajero,
                 idTarea = idTarea,
@@ -38,7 +34,11 @@ class LocationRepository(private val context: Context) {
             )
             val response = RetrofitClient.api.updateLocation(request)
             if (response.isSuccessful) {
-                Log.d(TAG, "Location sent successfully: $latitude, $longitude (Task ID: $idTarea)")
+                if (idTarea != null) {
+                    Log.d(TAG, "Location sent WITH task: lat=$latitude, lng=$longitude, taskId=$idTarea")
+                } else {
+                    Log.d(TAG, "Location sent WITHOUT task: lat=$latitude, lng=$longitude")
+                }
             } else {
                 Log.e(TAG, "Failed to send location: ${response.code()}")
             }
