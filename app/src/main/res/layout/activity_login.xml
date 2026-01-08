@@ -4,16 +4,17 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/white"
+    android:background="@color/login_background"
     android:padding="24dp"
     tools:context=".ui.login.LoginActivity">
 
     <ImageView
         android:id="@+id/logoImageView"
-        android:layout_width="120dp"
-        android:layout_height="120dp"
+        android:layout_width="150dp"
+        android:layout_height="150dp"
         android:layout_marginTop="64dp"
-        android:src="@drawable/ic_logo_placeholder"
+        android:scaleType="fitCenter"
+        android:src="@drawable/login"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -22,12 +23,12 @@
         android:id="@+id/titleTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:text="SoprintSGR"
-        android:textColor="@color/black"
-        android:textSize="28sp"
-        android:textStyle="bold"
-        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="32dp"
+        android:layout_marginStart="4dp"
+        android:text="Iniciar sesión"
+        android:textColor="@color/login_accent"
+        android:textSize="20sp"
+        android:textStyle="normal"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/logoImageView" />
 
@@ -35,14 +36,15 @@
         android:id="@+id/usernameEditText"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="64dp"
-        android:background="@drawable/rounded_edittext"
-        android:drawableStart="@drawable/ic_person"
-        android:drawablePadding="12dp"
-        android:hint="Usuario"
+        android:layout_marginTop="24dp"
+        android:background="@drawable/bg_edit_text_underline"
+        android:hint="Ingresar Usuario"
         android:inputType="text"
-        android:textColor="@color/black"
-        android:textColorHint="@color/gray"
+        android:paddingTop="12dp"
+        android:paddingBottom="12dp"
+        android:textColor="@color/white"
+        android:textColorHint="@color/login_text_secondary"
+        android:textSize="16sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/titleTextView" />
@@ -51,33 +53,105 @@
         android:id="@+id/passwordEditText"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:background="@drawable/rounded_edittext"
-        android:drawableStart="@drawable/ic_lock"
+        android:layout_marginTop="24dp"
+        android:background="@drawable/bg_edit_text_underline"
         android:drawableEnd="@drawable/ic_visibility_off"
         android:drawablePadding="12dp"
-        android:hint="Contraseña"
+        android:drawableTint="@color/login_text_secondary"
+        android:hint="Ingresar contraseña"
         android:inputType="textPassword"
-        android:textColor="@color/black"
-        android:textColorHint="@color/gray"
+        android:paddingBottom="12dp"
+        android:paddingTop="12dp"
+        android:textColor="@color/white"
+        android:textColorHint="@color/login_text_secondary"
+        android:textSize="16sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/usernameEditText" />
+
+    <TextView
+        android:id="@+id/forgotPasswordTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:textColor="@color/login_accent"
+        android:textSize="14sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/passwordEditText" />
 
     <Button
         android:id="@+id/loginButton"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="32dp"
-        android:background="@drawable/rounded_button"
-        android:text="Ingresar"
-        android:textAllCaps="false"
+        android:layout_marginTop="24dp"
+        android:background="@drawable/bg_login_button"
+        android:text="INGRESAR"
         android:textColor="@color/white"
-        android:textSize="16sp"
+        android:textSize="14sp"
         android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/passwordEditText" />
+        app:layout_constraintTop_toBottomOf="@+id/forgotPasswordTextView" />
+
+    <View
+        android:id="@+id/dividerLeft"
+        android:layout_width="0dp"
+        android:layout_height="1dp"
+        android:layout_marginEnd="16dp"
+        android:background="@color/login_text_secondary"
+        app:layout_constraintBottom_toBottomOf="@+id/moreTextView"
+        app:layout_constraintEnd_toStartOf="@+id/moreTextView"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/moreTextView" />
+
+    <TextView
+        android:id="@+id/moreTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:text="Más"
+        android:textColor="@color/white"
+        android:textSize="14sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/loginButton" />
+
+    <View
+        android:id="@+id/dividerRight"
+        android:layout_width="0dp"
+        android:layout_height="1dp"
+        android:layout_marginStart="16dp"
+        android:background="@color/login_text_secondary"
+        app:layout_constraintBottom_toBottomOf="@+id/moreTextView"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="@+id/moreTextView"
+        app:layout_constraintTop_toTopOf="@+id/moreTextView" />
+
+    <LinearLayout
+        android:id="@+id/contactLayout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:gravity="center"
+        android:orientation="vertical"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/moreTextView">
+
+        <ImageView
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:src="@drawable/ic_phone"
+            app:tint="@color/login_accent" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="WhatsApp"
+            android:textColor="@color/login_accent"
+            android:textSize="14sp" />
+    </LinearLayout>
 
     <ProgressBar
         android:id="@+id/progressBar"
@@ -87,6 +161,6 @@
         android:visibility="gone"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/loginButton" />
+        app:layout_constraintTop_toBottomOf="@+id/contactLayout" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

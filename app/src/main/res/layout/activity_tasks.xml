@@ -9,16 +9,17 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
-        android:fitsSystemWindows="true">
+        android:fitsSystemWindows="true"
+        android:background="@color/login_background">
 
         <androidx.appcompat.widget.Toolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            android:background="@color/black"
+            android:background="@color/login_background"
             android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
             app:title="Mis Tareas"
-            app:titleTextColor="@color/white" />
+            app:titleTextColor="@color/login_accent" />
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recyclerViewTasks"

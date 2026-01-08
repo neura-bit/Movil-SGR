@@ -7,6 +7,8 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.ProgressBar
 import android.widget.Toast
+import android.widget.LinearLayout
+import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.example.soprintsgr.MainActivity
@@ -60,6 +62,15 @@ class LoginActivity : AppCompatActivity() {
             }
 
             performLogin(username, password)
+        }
+
+        val contactLayout = findViewById<LinearLayout>(R.id.contactLayout)
+        contactLayout.setOnClickListener {
+            val contactNumber = "+593963879454"
+            val url = "https://api.whatsapp.com/send?phone=$contactNumber"
+            val intent = Intent(Intent.ACTION_VIEW)
+            intent.data = Uri.parse(url)
+            startActivity(intent)
         }
     }
 

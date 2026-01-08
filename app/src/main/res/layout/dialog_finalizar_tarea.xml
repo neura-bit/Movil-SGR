@@ -3,14 +3,14 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@drawable/dialog_background"
+    android:background="@color/login_background"
     android:orientation="vertical">
 
     <!-- Header con gradiente naranja -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@drawable/gradient_primary"
+        android:background="#212121"
         android:gravity="center"
         android:orientation="horizontal"
         android:padding="20dp">
@@ -20,14 +20,14 @@
             android:layout_height="32dp"
             android:layout_marginEnd="12dp"
             android:src="@drawable/ic_check_circle"
-            android:tint="@android:color/white" />
+            android:tint="@color/login_accent" />
 
         <TextView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="Finalizar Tarea"
-            android:textColor="@android:color/white"
+            android:textColor="@color/white"
             android:textSize="20sp"
             android:textStyle="bold" />
 
@@ -52,7 +52,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="20dp"
                 android:text="Por favor, ingresa una observación para completar esta tarea."
-                android:textColor="#666666"
+                android:textColor="@color/login_text_secondary"
                 android:textSize="14sp"
                 android:lineSpacingExtra="2dp" />
 
@@ -68,8 +68,8 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="Código de Verificación"
-                    android:textColor="#212121"
-                    android:textSize="16sp"
+                    android:textColor="@color/login_accent"
+                    android:textSize="14sp"
                     android:textStyle="bold"
                     android:layout_marginBottom="12dp" />
 
@@ -87,11 +87,11 @@
                         android:layout_height="64dp"
                         android:layout_weight="1"
                         android:layout_marginEnd="8dp"
-                        android:background="@drawable/code_box_selector"
+                        android:background="@drawable/bg_edit_text_underline"
                         android:gravity="center"
                         android:inputType="number"
                         android:maxLength="1"
-                        android:textColor="#212121"
+                        android:textColor="@color/white"
                         android:textSize="24sp"
                         android:textStyle="bold"
                         android:importantForAutofill="no" />
@@ -102,11 +102,11 @@
                         android:layout_height="64dp"
                         android:layout_weight="1"
                         android:layout_marginEnd="8dp"
-                        android:background="@drawable/code_box_selector"
+                        android:background="@drawable/bg_edit_text_underline"
                         android:gravity="center"
                         android:inputType="number"
                         android:maxLength="1"
-                        android:textColor="#212121"
+                        android:textColor="@color/white"
                         android:textSize="24sp"
                         android:textStyle="bold"
                         android:importantForAutofill="no" />
@@ -117,11 +117,11 @@
                         android:layout_height="64dp"
                         android:layout_weight="1"
                         android:layout_marginEnd="8dp"
-                        android:background="@drawable/code_box_selector"
+                        android:background="@drawable/bg_edit_text_underline"
                         android:gravity="center"
                         android:inputType="number"
                         android:maxLength="1"
-                        android:textColor="#212121"
+                        android:textColor="@color/white"
                         android:textSize="24sp"
                         android:textStyle="bold"
                         android:importantForAutofill="no" />
@@ -131,11 +131,11 @@
                         android:layout_width="0dp"
                         android:layout_height="64dp"
                         android:layout_weight="1"
-                        android:background="@drawable/code_box_selector"
+                        android:background="@drawable/bg_edit_text_underline"
                         android:gravity="center"
                         android:inputType="number"
                         android:maxLength="1"
-                        android:textColor="#212121"
+                        android:textColor="@color/white"
                         android:textSize="24sp"
                         android:textStyle="bold"
                         android:importantForAutofill="no" />
@@ -149,8 +149,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Observación"
-                android:textColor="#212121"
-                android:textSize="16sp"
+                android:textColor="@color/login_accent"
+                android:textSize="14sp"
                 android:textStyle="bold"
                 android:layout_marginBottom="12dp" />
 
@@ -160,10 +160,12 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="Escribe aquí tu observación..."
-                app:boxStrokeColor="#FF6B35"
-                app:hintTextColor="#FF6B35"
+                app:boxStrokeColor="@color/login_accent"
+                app:hintTextColor="@color/login_text_secondary"
+                app:boxBackgroundColor="@color/card_background_dark"
+                android:textColorHint="@color/login_text_secondary"
                 app:endIconMode="clear_text"
-                app:endIconTint="#FF6B35">
+                app:endIconTint="@color/login_accent">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/etObservacion"
@@ -174,7 +176,7 @@
                     android:lines="4"
                     android:maxLines="6"
                     android:minLines="3"
-                    android:textColor="@color/black"
+                    android:textColor="@color/white"
                     android:textSize="15sp"
                     android:paddingTop="12dp"
                     android:paddingBottom="12dp" />
@@ -188,7 +190,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
                 android:visibility="gone"
-                app:cardBackgroundColor="#FFEBEE"
+                app:cardBackgroundColor="#212121"
                 app:cardCornerRadius="8dp"
                 app:cardElevation="0dp"
                 app:strokeColor="#F44336"
@@ -213,7 +215,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:textColor="#C62828"
+                        android:textColor="#FF6B6B"
                         android:textSize="13sp" />
 
                 </LinearLayout>
@@ -231,7 +233,7 @@
         android:gravity="end"
         android:orientation="horizontal"
         android:padding="16dp"
-        android:background="#F5F5F5">
+        android:background="@color/card_background_dark">
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnCancelar"
@@ -241,9 +243,9 @@
             android:layout_marginEnd="12dp"
             android:minWidth="110dp"
             android:text="Cancelar"
-            android:textColor="#666666"
+            android:textColor="@color/login_text_secondary"
             android:textSize="15sp"
-            app:strokeColor="#BDBDBD"
+            app:strokeColor="@color/login_text_secondary"
             app:strokeWidth="1dp"
             app:cornerRadius="12dp" />
 
@@ -251,10 +253,10 @@
             android:id="@+id/btnFinalizar"
             android:layout_width="wrap_content"
             android:layout_height="56dp"
-            android:backgroundTint="#EF6822"
+            android:backgroundTint="@color/login_accent"
             android:minWidth="130dp"
             android:text="Finalizar"
-            android:textColor="@android:color/white"
+            android:textColor="@color/black"
             android:textSize="15sp"
             android:textStyle="bold"
             app:cornerRadius="12dp"
@@ -262,8 +264,9 @@
             app:icon="@drawable/ic_check_circle"
             app:iconGravity="textStart"
             app:iconSize="20dp"
-            app:iconTint="@android:color/white" />
+            app:iconTint="@color/black" />
 
     </LinearLayout>
 
 </LinearLayout>
+

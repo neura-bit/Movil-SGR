@@ -21,4 +21,15 @@
     <color name="secondary">@color/gray</color>
     <color name="secondary_variant">@color/light_gray</color>
     <color name="on_secondary">@color/black</color>
+
+    <!-- Login Colors -->
+    <color name="login_background">#121212</color>
+    <color name="login_accent">#FFB300</color> <!-- Yellow/Orange -->
+    <color name="login_text_secondary">#B0BEC5</color>
+
+    <color name="login_input_line">#424242</color>
+
+    <!-- App Dark Theme -->
+    <color name="card_background_dark">#121212</color> <!-- Matching Login BG for cards/surfaces -->
+    <color name="surface_dark">#1E1E1E</color> <!-- Slightly lighter for contrast inside cards -->
 </resources>

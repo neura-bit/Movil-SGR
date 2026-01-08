@@ -24,6 +24,7 @@
             android:layout_margin="16dp"
             app:cardCornerRadius="12dp"
             app:cardElevation="8dp"
+            app:cardBackgroundColor="@color/card_background_dark"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent">
@@ -41,7 +42,7 @@
                     android:layout_height="40dp"
                     android:src="@drawable/ic_menu"
                     android:padding="8dp"
-                    app:tint="@color/black"
+                    app:tint="@color/login_accent"
                     android:contentDescription="Menu"
                     android:clickable="true"
                     android:focusable="true"
@@ -52,7 +53,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="Soprint SGR"
-                    android:textColor="@color/black"
+                    android:textColor="@color/white"
                     android:textSize="18sp"
                     android:textStyle="bold"
                     android:gravity="center"/>
@@ -61,7 +62,7 @@
                     android:layout_width="32dp"
                     android:layout_height="32dp"
                     android:src="@drawable/ic_person"
-                    app:tint="@color/black"
+                    app:tint="@color/login_accent"
                     android:contentDescription="Profile" />
             </LinearLayout>
         </androidx.cardview.widget.CardView>
@@ -84,6 +85,7 @@
             android:layout_marginStart="16dp"
             app:cardCornerRadius="12dp"
             app:cardElevation="4dp"
+            app:cardBackgroundColor="@color/card_background_dark"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent">
@@ -95,7 +97,7 @@
                 android:gravity="center_vertical"
                 android:paddingStart="12dp"
                 android:paddingTop="10dp"
-               android:paddingEnd="12dp"
+                android:paddingEnd="12dp"
                 android:paddingBottom="10dp">
 
                 <View
@@ -123,8 +125,8 @@
             android:layout_marginBottom="160dp"
             android:src="@android:drawable/ic_menu_mylocation"
             android:contentDescription="Center Location"
-            app:backgroundTint="@color/black"
-            app:tint="@color/white"
+            app:backgroundTint="@color/login_accent"
+            app:tint="@color/black"
             app:fabSize="mini"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
@@ -138,8 +140,8 @@
             android:layout_marginBottom="100dp"
             android:src="@drawable/ic_visibility"
             android:contentDescription="Toggle Theme"
-            app:backgroundTint="@color/black"
-            app:tint="@color/white"
+            app:backgroundTint="@color/login_accent"
+            app:tint="@color/black"
             app:fabSize="mini"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
