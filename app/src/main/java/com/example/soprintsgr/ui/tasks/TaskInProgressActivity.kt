@@ -1,5 +1,6 @@
 package com.example.soprintsgr.ui.tasks
 
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -21,12 +22,30 @@ import com.google.android.material.button.MaterialButton
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.example.soprintsgr.data.api.ArchivoAdjunto
+import com.bumptech.glide.Glide
+import com.bumptech.glide.load.model.GlideUrl
+import com.bumptech.glide.load.model.LazyHeaders
+import com.bumptech.glide.load.DataSource
+import com.bumptech.glide.load.engine.GlideException
+import com.bumptech.glide.request.RequestListener
+import com.bumptech.glide.request.target.Target
+import android.app.DownloadManager
+import android.os.Environment
+import androidx.core.content.FileProvider
+import java.io.File
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.io.FileOutputStream
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import com.example.soprintsgr.data.SessionManager
 
 class TaskInProgressActivity : AppCompatActivity() {
     private lateinit var tvTimer: TextView
     private lateinit var tvTaskName: TextView
-    private lateinit var tvTipoOperacion: TextView
-    private lateinit var tvCategoria: TextView
     private lateinit var tvClienteName: TextView
     private lateinit var tvClienteAddress: TextView
     private lateinit var tvClientePhone: TextView
@@ -34,6 +53,14 @@ class TaskInProgressActivity : AppCompatActivity() {
     private lateinit var btnOpenMap: MaterialButton
     private lateinit var btnFinishTask: MaterialButton
     private lateinit var fabBack: FloatingActionButton
+    
+    // Attachments UI
+    private lateinit var cvAttachments: View
+    private lateinit var rvArchivosAdjuntos: RecyclerView
+    private lateinit var cvComentario: View
+    private lateinit var tvComentario: TextView
+    private lateinit var tvVerMasComentario: TextView
+    private lateinit var sessionManager: SessionManager
     
     private lateinit var activeTaskManager: ActiveTaskManager
     private lateinit var taskRepository: TaskRepository
@@ -53,6 +80,7 @@ class TaskInProgressActivity : AppCompatActivity() {
         
         activeTaskManager = ActiveTaskManager.getInstance(this)
         taskRepository = TaskRepository(this)
+        sessionManager = SessionManager(this)
         
         initViews()
         loadTaskData()
@@ -63,8 +91,6 @@ class TaskInProgressActivity : AppCompatActivity() {
     private fun initViews() {
         tvTimer = findViewById(R.id.tvTimer)
         tvTaskName = findViewById(R.id.tvTaskName)
-        tvTipoOperacion = findViewById(R.id.tvTipoOperacion)
-        tvCategoria = findViewById(R.id.tvCategoria)
         tvClienteName = findViewById(R.id.tvClienteName)
         tvClienteAddress = findViewById(R.id.tvClienteAddress)
         tvClientePhone = findViewById(R.id.tvClientePhone)
@@ -72,6 +98,16 @@ class TaskInProgressActivity : AppCompatActivity() {
         btnOpenMap = findViewById(R.id.btnOpenMap)
         btnFinishTask = findViewById(R.id.btnFinishTask)
         fabBack = findViewById(R.id.fabBack)
+
+        // Attachments
+        cvAttachments = findViewById(R.id.cvAttachments)
+        rvArchivosAdjuntos = findViewById(R.id.rvArchivosAdjuntos)
+        rvArchivosAdjuntos.layoutManager = LinearLayoutManager(this)
+
+        // Comments
+        cvComentario = findViewById(R.id.cvComentario)
+        tvComentario = findViewById(R.id.tvComentario)
+        tvVerMasComentario = findViewById(R.id.tvVerMasComentario)
     }
 
     private fun loadTaskData() {
@@ -85,11 +121,59 @@ class TaskInProgressActivity : AppCompatActivity() {
         
         currentTask?.let { task ->
             tvTaskName.text = task.nombre
-            tvTipoOperacion.text = task.tipoOperacion.nombre
-            tvCategoria.text = task.categoria.nombre
             tvClienteName.text = task.cliente.nombre
             tvClienteAddress.text = task.cliente.direccion
             tvClientePhone.text = task.cliente.telefono
+
+            // Load Attachments
+            if (!task.archivosAdjuntos.isNullOrEmpty()) {
+                cvAttachments.visibility = View.VISIBLE
+                val adapter = ArchivoAdjuntoAdapter(task.archivosAdjuntos) { archivo ->
+                    previewFile(archivo)
+                }
+                rvArchivosAdjuntos.adapter = adapter
+            } else {
+                cvAttachments.visibility = View.GONE
+            }
+
+            // Show Comentario if exists
+            if (!task.comentario.isNullOrEmpty()) {
+                cvComentario.visibility = View.VISIBLE
+                tvComentario.text = task.comentario
+                
+                // Reset state
+                tvComentario.maxLines = 3
+                tvVerMasComentario.visibility = View.GONE
+                tvVerMasComentario.text = "Ver más"
+                
+                // Check if text exceeds 3 lines
+                // Check if text exceeds 3 lines
+                tvComentario.post {
+                    val layout = tvComentario.layout
+                    if (layout != null) {
+                        val lines = layout.lineCount
+                        if (lines > 0) {
+                            val ellipsisCount = layout.getEllipsisCount(lines - 1)
+                            if (ellipsisCount > 0) {
+                                tvVerMasComentario.visibility = View.VISIBLE
+                                tvVerMasComentario.setOnClickListener {
+                                    if (tvComentario.maxLines == 3) {
+                                        // Expand
+                                        tvComentario.maxLines = Int.MAX_VALUE
+                                        tvVerMasComentario.text = "Ver menos"
+                                    } else {
+                                        // Collapse
+                                        tvComentario.maxLines = 3
+                                        tvVerMasComentario.text = "Ver más"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            } else {
+                cvComentario.visibility = View.GONE
+            }
         }
     }
 
@@ -326,6 +410,157 @@ class TaskInProgressActivity : AppCompatActivity() {
                 btnFinalizar.setIconResource(R.drawable.ic_check_circle)
             }
         }
+    }
+
+    private fun previewFile(archivo: ArchivoAdjunto) {
+        val extension = archivo.nombreOriginal.substringAfterLast('.', "").lowercase()
+
+        when (extension) {
+            "jpg", "jpeg", "png", "gif", "webp" -> previewImage(archivo)
+            "pdf" -> previewPdf(archivo)
+            else -> downloadFile(archivo)
+        }
+    }
+
+    private fun previewImage(archivo: ArchivoAdjunto) {
+        val token = sessionManager.getToken()
+        if (token == null) {
+            Toast.makeText(this, "Error: Token nulo", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val url = "https://seguimiento.srv1070869.hstgr.cloud/api/archivos/${archivo.idArchivo}"
+        
+        val dialogView = layoutInflater.inflate(R.layout.dialog_image_preview, null)
+        val ivPreview = dialogView.findViewById<android.widget.ImageView>(R.id.ivPreview)
+        val progressBar = dialogView.findViewById<android.widget.ProgressBar>(R.id.progressBarPreview)
+        val tvError = dialogView.findViewById<android.widget.TextView>(R.id.tvErrorPreview)
+
+        val glideUrl = GlideUrl(
+            url,
+            LazyHeaders.Builder()
+                .addHeader("Authorization", "Bearer $token")
+                .build()
+        )
+
+        Glide.with(this)
+            .load(glideUrl)
+            .listener(object : RequestListener<android.graphics.drawable.Drawable> {
+                override fun onLoadFailed(
+                    e: GlideException?,
+                    model: Any?,
+                    target: Target<android.graphics.drawable.Drawable>,
+                    isFirstResource: Boolean
+                ): Boolean {
+                    progressBar.visibility = View.GONE
+                    tvError.visibility = View.VISIBLE
+                    tvError.text = "Error: ${e?.message}"
+                    return false
+                }
+
+                override fun onResourceReady(
+                    resource: android.graphics.drawable.Drawable,
+                    model: Any,
+                    target: Target<android.graphics.drawable.Drawable>?,
+                    dataSource: DataSource,
+                    isFirstResource: Boolean
+                ): Boolean {
+                    progressBar.visibility = View.GONE
+                    return false
+                }
+            })
+            .into(ivPreview)
+
+        AlertDialog.Builder(this, android.R.style.Theme_Black_NoTitleBar_Fullscreen)
+            .setView(dialogView)
+            .setPositiveButton("Cerrar", null)
+            .show()
+    }
+
+    private fun previewPdf(archivo: ArchivoAdjunto) {
+        val token = sessionManager.getToken() ?: return
+        val url = "https://seguimiento.srv1070869.hstgr.cloud/api/archivos/${archivo.idArchivo}"
+        
+        // Show loading
+        val progressDialog = android.app.ProgressDialog(this).apply {
+            setMessage("Descargando PDF...")
+            setCancelable(false)
+            show()
+        }
+
+        lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                val client = OkHttpClient()
+                val request = Request.Builder()
+                    .url(url)
+                    .addHeader("Authorization", "Bearer $token")
+                    .build()
+
+                val response = client.newCall(request).execute()
+                if (!response.isSuccessful) throw Exception("Failed to download file: ${response.code()}")
+
+                val inputStream = response.body()?.byteStream() ?: throw Exception("Empty response body")
+                val filename = "temp_${System.currentTimeMillis()}.pdf"
+                val file = File(cacheDir, filename)
+                val outputStream = FileOutputStream(file)
+
+                inputStream.use { input ->
+                    outputStream.use { output ->
+                        input.copyTo(output)
+                    }
+                }
+
+                withContext(Dispatchers.Main) {
+                    progressDialog.dismiss()
+                    openPdf(file)
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    progressDialog.dismiss()
+                    Toast.makeText(this@TaskInProgressActivity, "Error al descargar PDF: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
+    private fun openPdf(file: File) {
+        try {
+            val uri = FileProvider.getUriForFile(
+                this,
+                "${packageName}.provider",
+                file
+            )
+
+            val intent = Intent(Intent.ACTION_VIEW).apply {
+                setDataAndType(uri, "application/pdf")
+                flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
+            }
+
+            startActivity(intent)
+        } catch (e: Exception) {
+            Toast.makeText(this, "No se encontró una aplicación para abrir PDF", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun downloadFile(archivo: ArchivoAdjunto) {
+        val token = sessionManager.getToken()
+        if (token == null) {
+            Toast.makeText(this, "Error de sesión", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val request = DownloadManager.Request(Uri.parse("https://seguimiento.srv1070869.hstgr.cloud/api/archivos/${archivo.idArchivo}"))
+            .setTitle(archivo.nombreOriginal)
+            .setDescription("Descargando archivo...")
+            .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+            .setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, "SoprintSGR/${archivo.nombreOriginal}")
+            .addRequestHeader("Authorization", "Bearer $token")
+            .setAllowedOverMetered(true)
+            .setAllowedOverRoaming(true)
+
+        val downloadManager = getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
+        downloadManager.enqueue(request)
+        Toast.makeText(this, "Descarga iniciada...", Toast.LENGTH_SHORT).show()
     }
 
     override fun onDestroy() {
