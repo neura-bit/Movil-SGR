@@ -20,7 +20,8 @@ data class Task(
     val observacion: String?,
     val proceso: String,
     val fechaInicio: String,
-    val codigo: String
+    val codigo: String,
+    val archivosAdjuntos: List<ArchivoAdjunto>? = null
 )
 
 data class TipoOperacion(

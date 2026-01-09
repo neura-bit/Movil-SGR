@@ -308,6 +308,33 @@
 
             </LinearLayout>
 
+			<!-- Archivos Adjuntos Section -->
+            <LinearLayout
+                android:id="@+id/layoutArchivosAdjuntos"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="ARCHIVOS ADJUNTOS"
+                    android:textColor="#B0B0B0"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.1"
+                    android:layout_marginBottom="12dp" />
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rvArchivosAdjuntos"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:nestedScrollingEnabled="false"
+                    android:layout_marginBottom="20dp" />
+
+            </LinearLayout>
+
             <!-- Comentario Section (if exists) -->
             <LinearLayout
                 android:id="@+id/layoutComentario"
@@ -349,7 +376,7 @@
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnOpenMap"
-                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="8dp"

@@ -16,6 +16,20 @@ import com.example.soprintsgr.R
 import com.example.soprintsgr.data.TaskRepository
 import com.example.soprintsgr.data.api.Task
 import kotlinx.coroutines.launch
+import com.bumptech.glide.Glide
+import com.bumptech.glide.load.model.GlideUrl
+import com.bumptech.glide.load.model.LazyHeaders
+import com.bumptech.glide.load.DataSource
+import com.bumptech.glide.load.engine.GlideException
+import com.bumptech.glide.request.RequestListener
+import com.bumptech.glide.request.target.Target
+import androidx.core.content.FileProvider
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.io.File
+import java.io.FileOutputStream
+import java.net.HttpURLConnection
+import java.net.URL
 
 class TasksActivity : AppCompatActivity() {
     private lateinit var recyclerView: RecyclerView
@@ -25,6 +39,7 @@ class TasksActivity : AppCompatActivity() {
     private lateinit var tvEmptyState: TextView
     private lateinit var taskRepository: TaskRepository
     private lateinit var activeTaskManager: com.example.soprintsgr.data.ActiveTaskManager
+    private lateinit var sessionManager: com.example.soprintsgr.data.SessionManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,6 +52,7 @@ class TasksActivity : AppCompatActivity() {
         
         taskRepository = TaskRepository(this)
         activeTaskManager = com.example.soprintsgr.data.ActiveTaskManager.getInstance(this)
+        sessionManager = com.example.soprintsgr.data.SessionManager(this)
         
         recyclerView = findViewById(R.id.recyclerViewTasks)
         swipeRefreshLayout = findViewById(R.id.swipeRefreshLayout)
@@ -113,7 +129,10 @@ class TasksActivity : AppCompatActivity() {
         val tvComentario = dialogView.findViewById<TextView>(R.id.tvComentario)
         val btnOpenMap = dialogView.findViewById<com.google.android.material.button.MaterialButton>(R.id.btnOpenMap)
         val btnIniciarTarea = dialogView.findViewById<com.google.android.material.button.MaterialButton>(R.id.btnIniciarTarea)
+
         val btnFinalizar = dialogView.findViewById<com.google.android.material.button.MaterialButton>(R.id.btnFinalizar)
+        val layoutArchivosAdjuntos = dialogView.findViewById<View>(R.id.layoutArchivosAdjuntos)
+        val rvArchivosAdjuntos = dialogView.findViewById<RecyclerView>(R.id.rvArchivosAdjuntos)
         
         // Set task data
         tvTaskTitle.text = task.nombre
@@ -138,6 +157,17 @@ class TasksActivity : AppCompatActivity() {
             tvComentario.text = task.comentario
         } else {
             layoutComentario.visibility = View.GONE
+        }
+
+        // Show archivos adjuntos if exists
+        if (!task.archivosAdjuntos.isNullOrEmpty()) {
+            layoutArchivosAdjuntos.visibility = View.VISIBLE
+            rvArchivosAdjuntos.layoutManager = LinearLayoutManager(this)
+            rvArchivosAdjuntos.adapter = ArchivoAdjuntoAdapter(task.archivosAdjuntos) { archivo ->
+                previewFile(archivo)
+            }
+        } else {
+            layoutArchivosAdjuntos.visibility = View.GONE
         }
         
         // Create dialog first
@@ -443,6 +473,159 @@ class TasksActivity : AppCompatActivity() {
         val intent = Intent(Intent.ACTION_VIEW, Uri.parse(uri))
         intent.setPackage("com.google.android.apps.maps")
         startActivity(intent)
+    }
+
+    private fun previewFile(archivo: com.example.soprintsgr.data.api.ArchivoAdjunto) {
+        val extension = archivo.nombreOriginal.substringAfterLast('.', "").lowercase()
+        
+        when (extension) {
+            "jpg", "jpeg", "png", "gif" -> previewImage(archivo)
+            "pdf" -> previewPdf(archivo)
+            else -> downloadFile(archivo) // Fallback to download for other types
+        }
+    }
+
+    private fun previewImage(archivo: com.example.soprintsgr.data.api.ArchivoAdjunto) {
+        val token = sessionManager.getToken()
+        if (token == null) {
+            android.widget.Toast.makeText(this, "Error: Token nulo", android.widget.Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val url = "https://seguimiento.srv1070869.hstgr.cloud/api/archivos/${archivo.idArchivo}"
+        android.util.Log.d("PreviewImage", "Loading URL: $url")
+
+        val dialogView = layoutInflater.inflate(R.layout.dialog_image_preview, null)
+        val ivPreview = dialogView.findViewById<android.widget.ImageView>(R.id.ivPreview)
+        val progressBar = dialogView.findViewById<android.widget.ProgressBar>(R.id.progressBarPreview)
+        val tvError = dialogView.findViewById<android.widget.TextView>(R.id.tvErrorPreview)
+
+        val glideUrl = GlideUrl(
+            url,
+            LazyHeaders.Builder()
+                .addHeader("Authorization", "Bearer $token")
+                .build()
+        )
+
+        Glide.with(this)
+            .load(glideUrl)
+            .listener(object : RequestListener<android.graphics.drawable.Drawable> {
+                override fun onLoadFailed(
+                    e: GlideException?,
+                    model: Any?,
+                    target: Target<android.graphics.drawable.Drawable>,
+                    isFirstResource: Boolean
+                ): Boolean {
+                    android.util.Log.e("PreviewImage", "Load failed", e)
+                    progressBar.visibility = View.GONE
+                    tvError.visibility = View.VISIBLE
+                    tvError.text = "Error: ${e?.message}"
+                    return false
+                }
+
+                override fun onResourceReady(
+                    resource: android.graphics.drawable.Drawable,
+                    model: Any,
+                    target: Target<android.graphics.drawable.Drawable>?,
+                    dataSource: DataSource,
+                    isFirstResource: Boolean
+                ): Boolean {
+                    progressBar.visibility = View.GONE
+                    return false
+                }
+            })
+            .into(ivPreview)
+
+        AlertDialog.Builder(this, android.R.style.Theme_Black_NoTitleBar_Fullscreen)
+            .setView(dialogView)
+            .setPositiveButton("Cerrar", null)
+            .show()
+    }
+
+    private fun previewPdf(archivo: com.example.soprintsgr.data.api.ArchivoAdjunto) {
+        val token = sessionManager.getToken() ?: return
+        
+        showLoading(true)
+        lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                val urlStr = "https://seguimiento.srv1070869.hstgr.cloud/api/archivos/${archivo.idArchivo}"
+                val url = URL(urlStr)
+                val connection = url.openConnection() as HttpURLConnection
+                connection.setRequestProperty("Authorization", "Bearer $token")
+                connection.connect()
+
+                if (connection.responseCode == HttpURLConnection.HTTP_OK) {
+                    val inputStream = connection.inputStream
+                    val file = File(cacheDir, archivo.nombreOriginal)
+                    val outputStream = FileOutputStream(file)
+                    
+                    inputStream.copyTo(outputStream)
+                    outputStream.close()
+                    inputStream.close()
+                    
+                    withContext(Dispatchers.Main) {
+                        showLoading(false)
+                        openPdf(file)
+                    }
+                } else {
+                    withContext(Dispatchers.Main) {
+                        showLoading(false)
+                        android.widget.Toast.makeText(this@TasksActivity, "Error al descargar PDF", android.widget.Toast.LENGTH_SHORT).show()
+                    }
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    showLoading(false)
+                    android.widget.Toast.makeText(this@TasksActivity, "Error: ${e.message}", android.widget.Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
+    private fun openPdf(file: File) {
+        try {
+            val uri = FileProvider.getUriForFile(
+                this,
+                "${applicationContext.packageName}.provider",
+                file
+            )
+            
+            val intent = Intent(Intent.ACTION_VIEW)
+            intent.setDataAndType(uri, "application/pdf")
+            intent.flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
+            startActivity(intent)
+        } catch (e: Exception) {
+            android.widget.Toast.makeText(this, "No hay aplicación para abrir PDF", android.widget.Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun downloadFile(archivo: com.example.soprintsgr.data.api.ArchivoAdjunto) {
+        val token = sessionManager.getToken()
+        if (token.isNullOrEmpty()) {
+            android.widget.Toast.makeText(this, "Error: No hay sesión activa", android.widget.Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        try {
+            val url = "https://seguimiento.srv1070869.hstgr.cloud/api/archivos/${archivo.idArchivo}"
+            
+            val request = android.app.DownloadManager.Request(Uri.parse(url))
+                .setTitle(archivo.nombreOriginal)
+                .setDescription("Descargando archivo adjunto...")
+                .setNotificationVisibility(android.app.DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+                .setDestinationInExternalPublicDir(android.os.Environment.DIRECTORY_DOWNLOADS, "SoprintSGR/${archivo.nombreOriginal}")
+                .addRequestHeader("Authorization", "Bearer $token")
+                .setAllowedOverMetered(true)
+                .setAllowedOverRoaming(true)
+
+            val downloadManager = getSystemService(android.content.Context.DOWNLOAD_SERVICE) as android.app.DownloadManager
+            downloadManager.enqueue(request)
+            
+            android.widget.Toast.makeText(this, "Descargando ${archivo.nombreOriginal}...", android.widget.Toast.LENGTH_SHORT).show()
+        } catch (e: Exception) {
+            android.widget.Toast.makeText(this, "Error al iniciar descarga: ${e.message}", android.widget.Toast.LENGTH_LONG).show()
+            e.printStackTrace()
+        }
     }
 
     private fun showLoading(show: Boolean) {
