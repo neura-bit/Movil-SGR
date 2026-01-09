@@ -3,15 +3,15 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="#121212"
-    android:backgroundTint="#00373535"
+    android:background="@color/card_background_dark"
+    android:backgroundTint="@color/background_overlay_dark"
     android:orientation="vertical">
 
     <!-- Header Negro (mismo en modo oscuro) -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="#212121"
+        android:background="@color/header_dark"
         android:orientation="vertical"
         android:padding="20dp">
 
@@ -20,7 +20,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="12dp"
-            android:text="Tarea"
+            android:text="@string/title_tarea"
             android:textColor="@android:color/white"
             android:textSize="22sp"
             android:textStyle="bold" />
@@ -60,8 +60,8 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="12dp"
                 android:letterSpacing="0.1"
-                android:text="INFORMACIÓN DEL CLIENTE"
-                android:textColor="#B0B0B0"
+                android:text="@string/info_cliente"
+                android:textColor="@color/text_secondary_dark"
                 android:textSize="11sp"
                 android:textStyle="bold" />
 
@@ -69,7 +69,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="20dp"
-                android:background="#1E1E1E"
+                android:background="@color/surface_dark"
                 android:orientation="vertical"
                 android:padding="16dp">
 
@@ -97,8 +97,8 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginBottom="2dp"
-                            android:text="Nombre"
-                            android:textColor="#B0B0B0"
+                            android:text="@string/label_nombre"
+                            android:textColor="@color/text_secondary_dark"
                             android:textSize="12sp" />
 
                         <TextView
@@ -138,8 +138,8 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginBottom="2dp"
-                            android:text="Dirección"
-                            android:textColor="#B0B0B0"
+                            android:text="@string/label_direccion"
+                            android:textColor="@color/text_secondary_dark"
                             android:textSize="12sp" />
 
                         <TextView
@@ -177,8 +177,8 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginBottom="2dp"
-                            android:text="Teléfono"
-                            android:textColor="#B0B0B0"
+                            android:text="@string/label_telefono"
+                            android:textColor="@color/text_secondary_dark"
                             android:textSize="12sp" />
 
                         <TextView
@@ -197,11 +197,11 @@
                         android:layout_width="48dp"
                         android:layout_height="48dp"
                         android:background="?attr/selectableItemBackgroundBorderless"
-                        android:contentDescription="Llamar"
+                        android:contentDescription="@string/desc_llamar"
                         android:padding="8dp"
                         android:scaleType="centerInside"
                         android:src="@android:drawable/ic_menu_call"
-                        android:tint="#4CAF50" />
+                        app:tint="@color/status_online_green" />
 
                 </LinearLayout>
 
@@ -213,8 +213,8 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="12dp"
                 android:letterSpacing="0.1"
-                android:text="DETALLES DE LA TAREA"
-                android:textColor="#B0B0B0"
+                android:text="@string/detalles_tarea"
+                android:textColor="@color/text_secondary_dark"
                 android:textSize="11sp"
                 android:textStyle="bold" />
 
@@ -222,7 +222,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="20dp"
-                android:background="#1E1E1E"
+                android:background="@color/surface_dark"
                 android:orientation="vertical"
                 android:padding="16dp">
 
@@ -236,8 +236,8 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Tipo"
-                        android:textColor="#B0B0B0"
+                        android:text="@string/label_tipo"
+                        android:textColor="@color/text_secondary_dark"
                         android:textSize="13sp" />
 
                     <TextView
@@ -263,8 +263,8 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Categoría"
-                        android:textColor="#B0B0B0"
+                        android:text="@string/label_categoria"
+                        android:textColor="@color/text_secondary_dark"
                         android:textSize="13sp" />
 
                     <TextView
@@ -289,8 +289,8 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Fecha límite"
-                        android:textColor="#B0B0B0"
+                        android:text="@string/label_fecha_limite"
+                        android:textColor="@color/text_secondary_dark"
                         android:textSize="13sp" />
 
                     <TextView
@@ -319,8 +319,8 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="ARCHIVOS ADJUNTOS"
-                    android:textColor="#B0B0B0"
+                    android:text="@string/title_archivos_adjuntos"
+                    android:textColor="@color/text_secondary_dark"
                     android:textSize="12sp"
                     android:textStyle="bold"
                     android:letterSpacing="0.1"
@@ -348,8 +348,8 @@
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="12dp"
                     android:letterSpacing="0.1"
-                    android:text="COMENTARIO"
-                    android:textColor="#B0B0B0"
+                    android:text="@string/title_comentario"
+                    android:textColor="@color/text_secondary_dark"
                     android:textSize="11sp"
                     android:textStyle="bold" />
 
@@ -358,7 +358,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="20dp"
-                    android:background="#1E1E1E"
+                    android:background="@color/surface_dark"
                     android:padding="16dp"
                     android:text="Este es un comentario de ejemplo"
                     android:textColor="#FFFFFF"
@@ -380,9 +380,10 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="8dp"
-                    android:background="#D9DBD5D5"
-                    android:text="Ver en Mapa"
-                    app:backgroundTintMode="src_atop"
+                    android:textColor="@android:color/white"
+                    app:strokeColor="@android:color/white"
+                    android:text="@string/btn_ver_mapa"
+                    app:iconTint="@android:color/white"
                     app:icon="@android:drawable/ic_dialog_map" />
 
                 <com.google.android.material.button.MaterialButton
@@ -390,8 +391,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="8dp"
-                    android:backgroundTint="#4CAF50"
-                    android:text="Iniciar Tarea"
+                    app:backgroundTint="@color/status_online_green"
+                    android:text="@string/btn_iniciar_tarea"
                     android:visibility="gone"
                     app:icon="@drawable/ic_play" />
 
@@ -399,7 +400,7 @@
                     android:id="@+id/btnFinalizar"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Finalizar"
+                    android:text="@string/btn_finalizar"
                     android:visibility="gone"
                     app:icon="@android:drawable/ic_menu_send" />
 

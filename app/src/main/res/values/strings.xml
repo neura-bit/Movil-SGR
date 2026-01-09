@@ -1,3 +1,18 @@
 <resources>
     <string name="app_name">SoprintSGR</string>
+    <string name="title_tarea">Tarea</string>
+    <string name="info_cliente">INFORMACIÓN DEL CLIENTE</string>
+    <string name="label_nombre">Nombre</string>
+    <string name="label_direccion">Dirección</string>
+    <string name="label_telefono">Teléfono</string>
+    <string name="detalles_tarea">DETALLES DE LA TAREA</string>
+    <string name="label_tipo">Tipo</string>
+    <string name="label_categoria">Categoría</string>
+    <string name="label_fecha_limite">Fecha límite</string>
+    <string name="title_archivos_adjuntos">ARCHIVOS ADJUNTOS</string>
+    <string name="title_comentario">COMENTARIO</string>
+    <string name="btn_ver_mapa">Ver en Mapa</string>
+    <string name="btn_iniciar_tarea">Iniciar Tarea</string>
+    <string name="btn_finalizar">Finalizar</string>
+    <string name="desc_llamar">Llamar</string>
 </resources>

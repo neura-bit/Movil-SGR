@@ -32,4 +32,7 @@
     <!-- App Dark Theme -->
     <color name="card_background_dark">#121212</color> <!-- Matching Login BG for cards/surfaces -->
     <color name="surface_dark">#1E1E1E</color> <!-- Slightly lighter for contrast inside cards -->
+    <color name="header_dark">#212121</color>
+    <color name="text_secondary_dark">#B0B0B0</color>
+    <color name="background_overlay_dark">#00373535</color>
 </resources>
