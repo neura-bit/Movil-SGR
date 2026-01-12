@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Color when item is checked/selected -->
+    <item android:color="@color/login_accent" android:state_checked="true" />
+    <!-- Color when item is pressed -->
+    <item android:color="@color/login_accent" android:state_pressed="true" />
+    <!-- Default color -->
+    <item android:color="@color/white" />
+</selector>

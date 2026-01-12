@@ -14,8 +14,4 @@
             android:icon="@drawable/ic_deliveries"
             android:title="Entregas" />
     </group>
-    <item
-        android:id="@+id/nav_logout"
-        android:icon="@drawable/ic_lock"
-        android:title="Cerrar Sesión" />
 </menu>

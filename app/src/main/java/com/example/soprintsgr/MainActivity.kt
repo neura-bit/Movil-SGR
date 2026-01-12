@@ -108,6 +108,13 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
         
         // Update navigation header with user info
         updateNavigationHeader(navView)
+        
+        // Setup logout button in footer
+        findViewById<View>(R.id.btnLogout).setOnClickListener {
+            sessionManager.clearSession()
+            drawerLayout.closeDrawer(GravityCompat.START)
+            navigateToLogin()
+        }
 
         // Setup Menu Button
         val btnMenu: ImageView = findViewById(R.id.btn_menu)
@@ -626,9 +633,22 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
         val headerView = navView.getHeaderView(0)
         val tvUserFullName = headerView.findViewById<TextView>(R.id.tvUserFullName)
         val tvUsername = headerView.findViewById<TextView>(R.id.tvUsername)
+        val ivProfilePhoto = headerView.findViewById<ImageView>(R.id.ivProfilePhoto)
         
         tvUserFullName.text = sessionManager.getNombreCompleto()
         tvUsername.text = "@${sessionManager.getUsername()}"
+        
+        // Load profile photo with Glide
+        val fotoPerfilUrl = sessionManager.getFotoPerfil()
+        if (!fotoPerfilUrl.isNullOrEmpty()) {
+            com.bumptech.glide.Glide.with(this)
+                .load(fotoPerfilUrl)
+                .placeholder(R.drawable.logotipo)
+                .error(R.drawable.logotipo)
+                .into(ivProfilePhoto)
+        } else {
+            ivProfilePhoto.setImageResource(R.drawable.logotipo)
+        }
     }
     
     private fun navigateToLogin() {
@@ -669,10 +689,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
             R.id.nav_deliveries -> {
                 val intent = Intent(this, com.example.soprintsgr.ui.completed.CompletedTasksActivity::class.java)
                 startActivity(intent)
-            }
-            R.id.nav_logout -> {
-                sessionManager.clearSession()
-                navigateToLogin()
             }
         }
         drawerLayout.closeDrawer(GravityCompat.START)

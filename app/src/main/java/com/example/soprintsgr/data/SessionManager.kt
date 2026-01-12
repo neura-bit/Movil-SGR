@@ -17,6 +17,8 @@ class SessionManager(context: Context) {
         private const val KEY_ID_USUARIO = "idUsuario"
         private const val KEY_EXPIRES_IN = "expiresIn"
         private const val KEY_LOGIN_TIMESTAMP = "loginTimestamp"
+        private const val KEY_CORREO = "correo"
+        private const val KEY_FOTO_PERFIL = "fotoPerfil"
     }
 
     fun saveSession(loginResponse: LoginResponse) {
@@ -29,6 +31,8 @@ class SessionManager(context: Context) {
             putInt(KEY_ID_USUARIO, loginResponse.idUsuario)
             putLong(KEY_EXPIRES_IN, loginResponse.expiresIn)
             putLong(KEY_LOGIN_TIMESTAMP, System.currentTimeMillis())
+            putString(KEY_CORREO, loginResponse.correo)
+            putString(KEY_FOTO_PERFIL, loginResponse.fotoPerfil)
             apply()
         }
     }
@@ -61,6 +65,14 @@ class SessionManager(context: Context) {
 
     fun getIdUsuario(): Int {
         return prefs.getInt(KEY_ID_USUARIO, -1)
+    }
+
+    fun getCorreo(): String? {
+        return prefs.getString(KEY_CORREO, null)
+    }
+
+    fun getFotoPerfil(): String? {
+        return prefs.getString(KEY_FOTO_PERFIL, null)
     }
 
     fun isLoggedIn(): Boolean {

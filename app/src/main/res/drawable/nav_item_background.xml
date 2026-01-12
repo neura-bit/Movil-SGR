@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Background when item is checked/selected -->
+    <item android:state_checked="true">
+        <shape android:shape="rectangle">
+            <solid android:color="#2AFFB300" />
+            <corners android:radius="8dp" />
+        </shape>
+    </item>
+    <!-- Background when item is pressed -->
+    <item android:state_pressed="true">
+        <shape android:shape="rectangle">
+            <solid android:color="#1AFFB300" />
+            <corners android:radius="8dp" />
+        </shape>
+    </item>
+    <!-- Default background - transparent -->
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@android:color/transparent" />
+        </shape>
+    </item>
+</selector>
