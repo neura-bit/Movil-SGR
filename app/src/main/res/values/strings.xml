@@ -15,4 +15,14 @@
     <string name="btn_iniciar_tarea">Iniciar Tarea</string>
     <string name="btn_finalizar">Finalizar</string>
     <string name="desc_llamar">Llamar</string>
+
+    <!-- Login Strings -->
+    <string name="login_title">Iniciar Sesión</string>
+    <string name="login_label_user">Usuario</string>
+    <string name="login_hint_user">Ingrese su usuario</string>
+    <string name="login_label_password">Contraseña</string>
+    <string name="login_hint_password">Ingrese su contraseña</string>
+    <string name="login_btn_enter">Ingresar</string>
+    <string name="login_help_question">¿Necesitas ayuda?</string>
+    <string name="login_contact_us">Contáctanos</string>
 </resources>
