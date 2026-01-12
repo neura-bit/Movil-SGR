@@ -211,7 +211,7 @@ class TaskInProgressActivity : AppCompatActivity() {
                 
                 try {
                     startActivity(intent)
-                } catch (e: Exception) {
+                } catch (_: Exception) {
                     // If Google Maps is not installed, open in browser
                     val browserIntent = Intent(Intent.ACTION_VIEW, 
                         Uri.parse("https://www.google.com/maps/search/?api=1&query=${task.cliente.latitud},${task.cliente.longitud}"))
@@ -481,12 +481,12 @@ class TaskInProgressActivity : AppCompatActivity() {
         val token = sessionManager.getToken() ?: return
         val url = "https://seguimiento.srv1070869.hstgr.cloud/api/archivos/${archivo.idArchivo}"
         
-        // Show loading
-        val progressDialog = android.app.ProgressDialog(this).apply {
-            setMessage("Descargando PDF...")
-            setCancelable(false)
-            show()
-        }
+        // Show loading dialog
+        val progressDialog = AlertDialog.Builder(this)
+            .setMessage("Descargando PDF...")
+            .setCancelable(false)
+            .create()
+        progressDialog.show()
 
         lifecycleScope.launch(Dispatchers.IO) {
             try {
@@ -537,7 +537,7 @@ class TaskInProgressActivity : AppCompatActivity() {
             }
 
             startActivity(intent)
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             Toast.makeText(this, "No se encontró una aplicación para abrir PDF", Toast.LENGTH_SHORT).show()
         }
     }
@@ -553,7 +553,7 @@ class TaskInProgressActivity : AppCompatActivity() {
             .setTitle(archivo.nombreOriginal)
             .setDescription("Descargando archivo...")
             .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-            .setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, "SoprintSGR/${archivo.nombreOriginal}")
+            .setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, "UBIKA/${archivo.nombreOriginal}")
             .addRequestHeader("Authorization", "Bearer $token")
             .setAllowedOverMetered(true)
             .setAllowedOverRoaming(true)

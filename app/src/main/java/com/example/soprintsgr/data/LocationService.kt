@@ -4,7 +4,6 @@ import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.Service
-import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.IBinder
@@ -54,12 +53,12 @@ class LocationService : Service() {
                 channelName,
                 NotificationManager.IMPORTANCE_LOW
             )
-            val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            val manager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
             manager.createNotificationChannel(channel)
         }
 
         val notification: Notification = NotificationCompat.Builder(this, channelId)
-            .setContentTitle("SoprintSGR")
+            .setContentTitle("UBIKA")
             .setContentText("Compartiendo ubicación en tiempo real...")
             .setSmallIcon(R.drawable.ic_launcher_foreground) // Ensure this icon exists or use a system one
             .build()
@@ -79,7 +78,7 @@ class LocationService : Service() {
                 locationCallback,
                 Looper.getMainLooper()
             )
-        } catch (e: SecurityException) {
+        } catch (_: SecurityException) {
             // Permissions should be checked before starting the service
         }
     }

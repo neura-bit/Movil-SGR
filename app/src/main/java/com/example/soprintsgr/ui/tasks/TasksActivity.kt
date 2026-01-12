@@ -102,7 +102,7 @@ class TasksActivity : AppCompatActivity() {
                     showEmptyState(false)
                     taskAdapter.updateTasks(tasks)
                 }
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 // Handle error
             } finally {
                 showLoading(false)
@@ -191,7 +191,6 @@ class TasksActivity : AppCompatActivity() {
         // Show appropriate button based on task status
         val isEnProceso = task.estadoTarea.idEstadoTarea == 2
         val isCreada = task.estadoTarea.idEstadoTarea == 1
-        val canFinalize = task.estadoTarea.nombre !in listOf("COMPLETADA", "CANCELADA")
         
         when {
             isEnProceso -> {
@@ -247,13 +246,15 @@ class TasksActivity : AppCompatActivity() {
                     return@launch
                 }
 
-                // Show loading
-                val progressDialog = android.app.ProgressDialog.show(
-                    this@TasksActivity,
-                    "Iniciando tarea",
-                    "Por favor espera...",
-                    true
-                )
+                // Show loading dialog
+                val progressDialog = AlertDialog.Builder(this@TasksActivity)
+                    .setView(android.widget.ProgressBar(this@TasksActivity).apply {
+                        isIndeterminate = true
+                    })
+                    .setMessage("Por favor espera...")
+                    .setCancelable(false)
+                    .create()
+                progressDialog.show()
 
                 val result = taskRepository.iniciarTarea(task.idTarea)
 
@@ -613,7 +614,7 @@ class TasksActivity : AppCompatActivity() {
                 .setTitle(archivo.nombreOriginal)
                 .setDescription("Descargando archivo adjunto...")
                 .setNotificationVisibility(android.app.DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-                .setDestinationInExternalPublicDir(android.os.Environment.DIRECTORY_DOWNLOADS, "SoprintSGR/${archivo.nombreOriginal}")
+                .setDestinationInExternalPublicDir(android.os.Environment.DIRECTORY_DOWNLOADS, "UBIKA/${archivo.nombreOriginal}")
                 .addRequestHeader("Authorization", "Bearer $token")
                 .setAllowedOverMetered(true)
                 .setAllowedOverRoaming(true)
