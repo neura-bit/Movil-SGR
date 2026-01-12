@@ -1,0 +1,50 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="112dp"
+    android:height="200dp"
+    android:viewportWidth="1080"
+    android:viewportHeight="1920">
+  
+    <!-- Fondo oscuro -->
+    <path
+        android:pathData="M0,0h1080v1920h-1080z"
+        android:fillColor="#121212"/>
+
+    <!-- Haz de luz sutil fondo -->
+    <path
+        android:pathData="M0,0 L1080,0 L1080,1000 L0,1920 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient 
+                android:startY="0" 
+                android:startX="0" 
+                android:endY="1500" 
+                android:endX="800"
+                android:type="linear">
+                <item android:offset="0" android:color="#08FFC107"/> <!-- Muy sutil -->
+                <item android:offset="1" android:color="#00000000"/>
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Línea fina 1 (Más sutil y delgada) -->
+    <path
+        android:pathData="M-50,750 Q540,600 1130,350"
+        android:strokeColor="#FFC107"
+        android:strokeWidth="1.5"
+        android:strokeAlpha="0.3"/>
+        
+    <!-- Línea fina 2 (Paralela a la 1) -->
+    <path
+        android:pathData="M-50,780 Q540,630 1130,380"
+        android:strokeColor="#FFA000"
+        android:strokeWidth="1"
+        android:strokeAlpha="0.25"/>
+        
+    <!-- Línea fina 3 (Inferior, muy sutil) -->
+    <path
+        android:pathData="M-50,900 Q540,700 1130,450"
+        android:strokeColor="#FFD54F"
+        android:strokeWidth="0.8"
+        android:strokeAlpha="0.15"/>
+
+</vector>
