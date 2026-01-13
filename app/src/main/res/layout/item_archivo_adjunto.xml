@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal"
@@ -11,14 +12,14 @@
         android:layout_height="24dp"
         android:src="@android:drawable/ic_menu_upload"
         android:layout_marginEnd="12dp"
-        android:tint="@color/login_accent" />
+        app:tint="@color/login_accent" />
 
     <TextView
         android:id="@+id/tvNombreArchivo"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Nombre del archivo"
-        android:textColor="@color/white"
+        android:textColor="@color/task_text_primary"
         android:textSize="14sp" />
 
 </LinearLayout>

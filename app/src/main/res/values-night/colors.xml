@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Semantic Colors for Tasks (Dark Mode) -->
+    <color name="task_background">#121212</color>
+    <color name="task_card_background">#1E1E1E</color>
+    <color name="task_text_primary">@color/white</color>
+    <color name="task_text_secondary">#B0B0B0</color>
+    <color name="task_surface">#2C2C2C</color>
+    <color name="task_icon_tint">@color/amber_primary</color>
+</resources>

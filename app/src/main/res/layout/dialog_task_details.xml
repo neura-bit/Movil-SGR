@@ -1,10 +1,11 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:fitsSystemWindows="true"
-    android:background="@color/login_background">
+    android:background="@drawable/bg_dialog_rounded">
 
     <!-- Header with Title -->
     <LinearLayout
@@ -14,31 +15,40 @@
         android:background="#212121"
         android:padding="20dp">
 
-        <TextView
-            android:id="@+id/tvTaskTitle"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Tarea"
-            android:textColor="@android:color/white"
-            android:textSize="22sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="12dp" />
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="12dp">
 
-        <!-- Task Estado Badge -->
-        <TextView
-            android:id="@+id/tvTaskEstado"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:background="@drawable/rounded_button"
-            android:paddingStart="16dp"
-            android:paddingTop="6dp"
-            android:paddingEnd="16dp"
-            android:paddingBottom="6dp"
-            android:text="CREADA"
-            android:textColor="@color/white"
-            android:textSize="11sp"
-            android:textStyle="bold"
-            android:letterSpacing="0.05" />
+            <TextView
+                android:id="@+id/tvTaskTitle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/title_tarea"
+                android:textColor="@android:color/white"
+                android:textSize="22sp"
+                android:textStyle="bold"
+                android:layout_marginEnd="8dp" />
+
+            <TextView
+                android:id="@+id/tvTaskEstado"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/rounded_button"
+                android:paddingStart="12dp"
+                android:paddingTop="4dp"
+                android:paddingEnd="12dp"
+                android:paddingBottom="4dp"
+                tools:text="CREADA"
+                android:textColor="@color/white"
+                android:textSize="10sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.05" />
+
+        </LinearLayout>
 
     </LinearLayout>
 
@@ -58,7 +68,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="INFORMACIÓN DEL CLIENTE"
+                android:text="@string/info_cliente"
                 android:textColor="@color/login_accent"
                 android:textSize="12sp"
                 android:textStyle="bold"
@@ -68,7 +78,7 @@
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:cardBackgroundColor="@color/card_background_dark"
+                app:cardBackgroundColor="@color/task_card_background"
                 app:cardCornerRadius="12dp"
                 android:layout_marginBottom="20dp">
 
@@ -85,11 +95,12 @@
                         android:gravity="center_vertical"
                         android:layout_marginBottom="12dp">
 
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="👤"
-                            android:textSize="18sp"
+                        <ImageView
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@drawable/ic_person"
+                            app:tint="@color/task_icon_tint"
+                            android:contentDescription="@string/desc_person_icon"
                             android:layout_marginEnd="12dp" />
 
                         <LinearLayout
@@ -101,8 +112,8 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Nombre"
-                                android:textColor="@color/login_text_secondary"
+                                android:text="@string/label_nombre"
+                                android:textColor="@color/task_text_secondary"
                                 android:textSize="12sp"
                                 android:layout_marginBottom="2dp" />
 
@@ -110,8 +121,8 @@
                                 android:id="@+id/tvClienteNombre"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Punto Net"
-                                android:textColor="@color/white"
+                                tools:text="Punto Net"
+                                android:textColor="@color/task_text_primary"
                                 android:textSize="15sp"
                                 android:textStyle="bold" />
 
@@ -126,11 +137,12 @@
                         android:gravity="center_vertical"
                         android:layout_marginBottom="12dp">
 
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="📍"
-                            android:textSize="18sp"
+                        <ImageView
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@drawable/ic_location"
+                            app:tint="@color/task_icon_tint"
+                            android:contentDescription="@string/desc_location_icon"
                             android:layout_marginEnd="12dp" />
 
                         <LinearLayout
@@ -142,8 +154,8 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Dirección"
-                                android:textColor="@color/login_text_secondary"
+                                android:text="@string/label_direccion"
+                                android:textColor="@color/task_text_secondary"
                                 android:textSize="12sp"
                                 android:layout_marginBottom="2dp" />
 
@@ -151,8 +163,8 @@
                                 android:id="@+id/tvClienteDireccion"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Calle 123 # 45-67"
-                                android:textColor="@color/white"
+                                tools:text="Calle 123 # 45-67"
+                                android:textColor="@color/task_text_primary"
                                 android:textSize="15sp" />
 
                         </LinearLayout>
@@ -165,11 +177,12 @@
                         android:orientation="horizontal"
                         android:gravity="center_vertical">
 
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="📞"
-                            android:textSize="18sp"
+                        <ImageView
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@drawable/ic_phone"
+                            app:tint="@color/task_icon_tint"
+                            android:contentDescription="@string/desc_phone_icon"
                             android:layout_marginEnd="12dp" />
 
                         <LinearLayout
@@ -181,8 +194,8 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Teléfono"
-                                android:textColor="@color/login_text_secondary"
+                                android:text="@string/label_telefono"
+                                android:textColor="@color/task_text_secondary"
                                 android:textSize="12sp"
                                 android:layout_marginBottom="2dp" />
 
@@ -190,8 +203,8 @@
                                 android:id="@+id/tvClienteTelefono"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="3001234567"
-                                android:textColor="@color/white"
+                                tools:text="3001234567"
+                                android:textColor="@color/task_text_primary"
                                 android:textSize="15sp" />
 
                         </LinearLayout>
@@ -205,7 +218,7 @@
                             android:src="@android:drawable/ic_menu_call"
                             android:tint="#4CAF50"
                             android:padding="8dp"
-                            android:contentDescription="Llamar"
+                            android:contentDescription="@string/desc_llamar"
                             android:scaleType="centerInside" />
 
                     </LinearLayout>
@@ -218,7 +231,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="DETALLES DE LA TAREA"
+                android:text="@string/detalles_tarea"
                 android:textColor="@color/login_accent"
                 android:textSize="12sp"
                 android:textStyle="bold"
@@ -228,7 +241,7 @@
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:cardBackgroundColor="@color/card_background_dark"
+                app:cardBackgroundColor="@color/task_card_background"
                 app:cardCornerRadius="12dp"
                 android:layout_marginBottom="20dp">
 
@@ -248,8 +261,8 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="Tipo"
-                            android:textColor="@color/login_text_secondary"
+                            android:text="@string/label_tipo"
+                            android:textColor="@color/task_text_secondary"
                             android:textSize="13sp" />
 
                         <TextView
@@ -257,8 +270,8 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="Entrega"
-                            android:textColor="@color/white"
+                            tools:text="Entrega"
+                            android:textColor="@color/task_text_primary"
                             android:textSize="14sp"
                             android:textStyle="bold"
                             android:gravity="end" />
@@ -275,8 +288,8 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="Categoría"
-                            android:textColor="@color/login_text_secondary"
+                            android:text="@string/label_categoria"
+                            android:textColor="@color/task_text_secondary"
                             android:textSize="13sp" />
 
                         <TextView
@@ -284,8 +297,8 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="Urgente"
-                            android:textColor="@color/white"
+                            tools:text="Urgente"
+                            android:textColor="@color/task_text_primary"
                             android:textSize="14sp"
                             android:textStyle="bold"
                             android:gravity="end" />
@@ -301,8 +314,8 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="Fecha límite"
-                            android:textColor="@color/login_text_secondary"
+                            android:text="@string/label_fecha_limite"
+                            android:textColor="@color/task_text_secondary"
                             android:textSize="13sp" />
 
                         <TextView
@@ -310,8 +323,8 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="2025-12-12 07:50"
-                            android:textColor="@color/white"
+                            tools:text="2025-12-12 07:50"
+                            android:textColor="@color/task_text_primary"
                             android:textSize="14sp"
                             android:textStyle="bold"
                             android:gravity="end" />
@@ -333,7 +346,7 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="ARCHIVOS ADJUNTOS"
+                    android:text="@string/title_archivos_adjuntos"
                     android:textColor="@color/login_accent"
                     android:textSize="12sp"
                     android:textStyle="bold"
@@ -360,7 +373,7 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="COMENTARIO"
+                    android:text="@string/title_comentario"
                     android:textColor="@color/login_accent"
                     android:textSize="12sp"
                     android:textStyle="bold"
@@ -373,8 +386,8 @@
                     android:layout_height="wrap_content"
                     android:background="@drawable/bg_edit_text_underline"
                     android:padding="16dp"
-                    android:text="Este es un comentario de ejemplo"
-                    android:textColor="@color/white"
+                    tools:text="Este es un comentario de ejemplo"
+                    android:textColor="@color/task_text_primary"
                     android:textSize="14sp"
                     android:layout_marginBottom="20dp" />
 
@@ -388,33 +401,27 @@
                 android:gravity="end"
                 android:layout_marginTop="8dp">
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnOpenMap"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Ver en Mapa"
-                    android:textColor="@color/login_accent"
-                    app:strokeColor="@color/login_accent"
-                    app:icon="@android:drawable/ic_dialog_map"
-                    app:iconTint="@color/login_accent"
-                    android:layout_marginEnd="8dp" />
+
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnIniciarTarea"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Iniciar Tarea"
+                    android:layout_width="match_parent"
+                    android:layout_height="60dp"
+                    android:text="@string/btn_iniciar_tarea"
                     app:icon="@drawable/ic_play"
+                    app:iconGravity="textStart"
+                    app:iconSize="24dp"
                     android:backgroundTint="#4CAF50"
-                    android:layout_marginEnd="8dp"
+                    android:textColor="@color/white"
+                    android:textSize="16sp"
+                    app:cornerRadius="12dp"
                     android:visibility="gone" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnFinalizar"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Finalizar"
+                    android:text="@string/btn_finalizar"
                     app:icon="@android:drawable/ic_menu_send"
                     android:visibility="gone" />
 

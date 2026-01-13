@@ -15,6 +15,9 @@
     <string name="btn_iniciar_tarea">Iniciar Tarea</string>
     <string name="btn_finalizar">Finalizar</string>
     <string name="desc_llamar">Llamar</string>
+    <string name="desc_person_icon">Icono cliente</string>
+    <string name="desc_location_icon">Icono ubicación</string>
+    <string name="desc_phone_icon">Icono teléfono</string>
 
     <!-- Login Strings -->
     <string name="login_title">Iniciar Sesión</string>

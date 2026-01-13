@@ -127,7 +127,7 @@ class TasksActivity : AppCompatActivity() {
         val tvFechaLimite = dialogView.findViewById<TextView>(R.id.tvFechaLimite)
         val layoutComentario = dialogView.findViewById<View>(R.id.layoutComentario)
         val tvComentario = dialogView.findViewById<TextView>(R.id.tvComentario)
-        val btnOpenMap = dialogView.findViewById<com.google.android.material.button.MaterialButton>(R.id.btnOpenMap)
+
         val btnIniciarTarea = dialogView.findViewById<com.google.android.material.button.MaterialButton>(R.id.btnIniciarTarea)
 
         val btnFinalizar = dialogView.findViewById<com.google.android.material.button.MaterialButton>(R.id.btnFinalizar)
@@ -173,7 +173,7 @@ class TasksActivity : AppCompatActivity() {
         // Create dialog first
         val dialog = AlertDialog.Builder(this)
             .setView(dialogView)
-            .setPositiveButton("Cerrar", null)
+
             .create()
         
         // Set phone call click listener
@@ -183,10 +183,7 @@ class TasksActivity : AppCompatActivity() {
             startActivity(intent)
         }
         
-        // Set open map click listener
-        btnOpenMap.setOnClickListener {
-            openInMaps(task.cliente.latitud, task.cliente.longitud)
-        }
+
         
         // Show appropriate button based on task status
         val isEnProceso = task.estadoTarea.idEstadoTarea == 2

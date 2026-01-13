@@ -41,4 +41,12 @@
     <color name="amber_dark">#FFA000</color>
     <color name="amber_light">#FFD54F</color>
     <color name="card_login_surface">#1E1E1E</color>
+
+    <!-- Semantic Colors for Tasks (Light Mode Default) -->
+    <color name="task_background">#F5F5F5</color>
+    <color name="task_card_background">@color/white</color>
+    <color name="task_text_primary">@color/black</color>
+    <color name="task_text_secondary">@color/gray</color>
+    <color name="task_surface">#EEEEEE</color>
+    <color name="task_icon_tint">@color/amber_primary</color>
 </resources>
