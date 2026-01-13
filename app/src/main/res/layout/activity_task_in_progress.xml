@@ -3,7 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/login_background"
+    android:background="@color/task_background"
     android:fitsSystemWindows="true"
     tools:context=".ui.tasks.TaskInProgressActivity">
 
@@ -11,7 +11,7 @@
     <View
         android:layout_width="match_parent"
         android:layout_height="300dp"
-        android:background="@color/black" 
+        android:background="@color/task_header_overlay" 
         android:alpha="0.2"/>
 
     <ScrollView
@@ -38,7 +38,7 @@
                 android:layout_marginTop="8dp"
                 app:cardCornerRadius="16dp"
                 app:cardElevation="4dp"
-                app:cardBackgroundColor="@color/card_background_dark">
+                app:cardBackgroundColor="@color/task_card_background">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -53,7 +53,7 @@
                         android:text="Nombre de la Tarea"
                         android:textSize="24sp"
                         android:textStyle="bold"
-                        android:textColor="@color/white" />
+                        android:textColor="@color/task_text_primary" />
 
                     <View
                         android:layout_width="40dp"
@@ -70,7 +70,7 @@
                         android:text="Nombre del Cliente"
                         android:textSize="18sp"
                         android:textStyle="bold"
-                        android:textColor="@color/white"
+                        android:textColor="@color/task_text_primary"
                         android:layout_marginBottom="6dp" />
 
                     <TextView
@@ -79,10 +79,10 @@
                         android:layout_height="wrap_content"
                         android:text="Dirección del cliente"
                         android:textSize="14sp"
-                        android:textColor="@color/login_text_secondary"
+                        android:textColor="@color/task_text_secondary"
                         android:drawableStart="@drawable/ic_location"
                         android:drawablePadding="8dp"
-                        android:drawableTint="@color/login_accent"
+                        android:drawableTint="@color/task_action_text_accent"
                         android:gravity="center_vertical"
                         android:layout_marginBottom="8dp" />
 
@@ -111,7 +111,7 @@
                 android:visibility="gone"
                 app:cardCornerRadius="16dp"
                 app:cardElevation="4dp"
-                app:cardBackgroundColor="@color/card_background_dark">
+                app:cardBackgroundColor="@color/task_card_background">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -125,7 +125,7 @@
                         android:text="@string/title_archivos_adjuntos"
                         android:textSize="14sp"
                         android:textStyle="bold"
-                        android:textColor="@color/login_accent"
+                        android:textColor="@color/task_action_text_accent"
                         android:layout_marginBottom="8dp" />
 
                     <androidx.recyclerview.widget.RecyclerView
@@ -147,7 +147,7 @@
                 android:visibility="gone"
                 app:cardCornerRadius="16dp"
                 app:cardElevation="4dp"
-                app:cardBackgroundColor="@color/card_background_dark">
+                app:cardBackgroundColor="@color/task_card_background">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -161,7 +161,7 @@
                         android:text="COMENTARIOS"
                         android:textSize="14sp"
                         android:textStyle="bold"
-                        android:textColor="@color/login_accent"
+                        android:textColor="@color/task_action_text_accent"
                         android:layout_marginBottom="8dp" />
 
                     <TextView
@@ -170,7 +170,7 @@
                         android:layout_height="wrap_content"
                         android:text="Comentario de la tarea..."
                         android:textSize="14sp"
-                        android:textColor="@color/white"
+                        android:textColor="@color/task_text_primary"
                         android:maxLines="3"
                         android:ellipsize="end" />
 
@@ -181,7 +181,7 @@
                         android:text="Ver más"
                         android:textSize="14sp"
                         android:textStyle="bold"
-                        android:textColor="@color/login_accent"
+                        android:textColor="@color/task_action_text_accent"
                         android:layout_marginTop="4dp"
                         android:visibility="gone"
                         android:clickable="true"
@@ -235,10 +235,10 @@
                     android:textStyle="bold"
                     app:icon="@drawable/ic_location"
                     app:iconGravity="top"
-                    app:iconTint="@color/login_accent"
+                    app:iconTint="@color/task_action_text_accent"
                     app:iconSize="28dp"
                     app:iconPadding="4dp"
-                    app:strokeColor="@color/login_accent"
+                    app:strokeColor="@color/task_action_text_accent"
                     app:strokeWidth="1dp"
                     app:cornerRadius="12dp"
                     android:insetTop="0dp"
