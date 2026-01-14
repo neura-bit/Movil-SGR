@@ -324,7 +324,16 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         // Set task details
         tvTipoOperacion.text = task.tipoOperacion.nombre
         tvCategoria.text = task.categoria.nombre
-        tvFechaLimite.text = task.fechaLimite
+        
+        // Format fecha limite to readable format
+        try {
+            val inputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
+            val outputFormat = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+            val date = inputFormat.parse(task.fechaLimite)
+            tvFechaLimite.text = date?.let { outputFormat.format(it) } ?: task.fechaLimite
+        } catch (e: Exception) {
+            tvFechaLimite.text = task.fechaLimite
+        }
         
         // Show comentario if exists
         if (!task.comentario.isNullOrEmpty()) {

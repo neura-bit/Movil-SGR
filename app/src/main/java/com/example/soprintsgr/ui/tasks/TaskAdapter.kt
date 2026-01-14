@@ -58,8 +58,9 @@ class TaskAdapter(
         // Set estado background color
         holder.tvEstado.setBackgroundColor(getEstadoColor(task.estadoTarea.nombre))
         
-        // Check if task is overdue
-        val isOverdue = isTaskOverdue(fechaLimiteDate)
+        // Check if task is overdue - only show for non-completed tasks
+        val isCompleted = task.estadoTarea.nombre.uppercase() == "COMPLETADA"
+        val isOverdue = isTaskOverdue(fechaLimiteDate) && !isCompleted
         
         if (isOverdue) {
             holder.ivOverdueAlert.visibility = View.VISIBLE

@@ -219,7 +219,16 @@ class CompletedTasksActivity : AppCompatActivity() {
         // Set task details
         tvTipoOperacion.text = task.tipoOperacion.nombre
         tvCategoria.text = task.categoria.nombre
-        tvFechaLimite.text = task.fechaLimite
+        
+        // Format fecha limite to readable format
+        try {
+            val inputFormat = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", java.util.Locale.getDefault())
+            val outputFormat = java.text.SimpleDateFormat("dd/MM/yyyy HH:mm", java.util.Locale.getDefault())
+            val date = inputFormat.parse(task.fechaLimite)
+            tvFechaLimite.text = date?.let { outputFormat.format(it) } ?: task.fechaLimite
+        } catch (e: Exception) {
+            tvFechaLimite.text = task.fechaLimite
+        }
         
         // Show comentario and observacion
         val fullComment = buildString {

@@ -13,4 +13,12 @@
 
     <!-- Chip Colors -->
     <color name="chip_unselected">#2C2C2C</color> <!-- Dark gray for unselected chips in dark mode -->
+
+    <!-- Dialog Colors (Dark Mode) -->
+    <color name="dialog_background_color">#121212</color>
+    <color name="dialog_header_background_color">#212121</color>
+    <color name="dialog_text_primary">#FFFFFF</color>
+    <color name="dialog_text_secondary">#B0BEC5</color>
+    <color name="dialog_input_text">#FFFFFF</color>
+    <color name="dialog_input_background">#1E1E1E</color>
 </resources>

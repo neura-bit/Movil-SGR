@@ -23,6 +23,17 @@ class LoginActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        // Check if user is already logged in
+        val sessionManager = com.example.soprintsgr.data.SessionManager(this)
+        if (sessionManager.isLoggedIn()) {
+            // Skip login and go directly to MainActivity
+            val intent = Intent(this, MainActivity::class.java)
+            startActivity(intent)
+            finish()
+            return
+        }
+        
         setContentView(R.layout.activity_login)
 
         authService = AuthService(this)
@@ -31,6 +42,60 @@ class LoginActivity : AppCompatActivity() {
         val passwordEditText = findViewById<EditText>(R.id.passwordEditText)
         loginButton = findViewById<Button>(R.id.loginButton)
         progressBar = findViewById<ProgressBar>(R.id.progressBar)
+        
+        // Elements to hide when password has focus
+        val usernameLabel = findViewById<android.widget.TextView>(R.id.usernameLabel)
+
+        // Focus listener for password field - hide username section with smooth animation
+        passwordEditText.setOnFocusChangeListener { _, hasFocus ->
+            if (hasFocus) {
+                // Animate hide with smooth fade out
+                usernameLabel?.animate()
+                    ?.alpha(0f)
+                    ?.setDuration(500)
+                    ?.setInterpolator(android.view.animation.DecelerateInterpolator())
+                    ?.withEndAction {
+                        usernameLabel?.visibility = View.GONE
+                    }?.start()
+                usernameEditText.animate()
+                    .alpha(0f)
+                    .setDuration(500)
+                    .setInterpolator(android.view.animation.DecelerateInterpolator())
+                    .withEndAction {
+                        usernameEditText.visibility = View.GONE
+                    }.start()
+            }
+        }
+
+        // Detect keyboard visibility to restore username field
+        val rootView = findViewById<View>(android.R.id.content)
+        rootView.viewTreeObserver.addOnGlobalLayoutListener {
+            val rect = android.graphics.Rect()
+            rootView.getWindowVisibleDisplayFrame(rect)
+            val screenHeight = rootView.rootView.height
+            val keypadHeight = screenHeight - rect.bottom
+            
+            // If keyboard is hidden (less than 200 pixels visible for keyboard)
+            if (keypadHeight < 200) {
+                // Clear focus from password field
+                if (!usernameEditText.hasFocus() && usernameEditText.visibility == View.GONE) {
+                    // Animate show with smooth fade in
+                    usernameLabel?.visibility = View.VISIBLE
+                    usernameLabel?.animate()
+                        ?.alpha(1f)
+                        ?.setDuration(500)
+                        ?.setInterpolator(android.view.animation.DecelerateInterpolator())
+                        ?.start()
+                    usernameEditText.visibility = View.VISIBLE
+                    usernameEditText.animate()
+                        .alpha(1f)
+                        .setDuration(500)
+                        .setInterpolator(android.view.animation.DecelerateInterpolator())
+                        .start()
+                    passwordEditText.clearFocus()
+                }
+            }
+        }
 
         // Password visibility toggle
         passwordEditText.setOnTouchListener { v, event ->
