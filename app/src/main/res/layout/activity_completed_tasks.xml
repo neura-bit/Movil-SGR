@@ -16,7 +16,7 @@
         android:elevation="4dp"
         android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
         app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
-        app:title="Entregas Completadas"
+        app:title="Historial"
         app:titleTextColor="@color/login_accent" />
 
     <!-- Filter Buttons Container -->
@@ -51,21 +51,33 @@
                 android:layout_height="wrap_content"
                 android:text="Hoy"
                 android:checked="true"
-                style="@style/Widget.MaterialComponents.Chip.Choice" />
+                style="@style/Widget.MaterialComponents.Chip.Choice"
+                app:chipBackgroundColor="@color/chip_background_selector"
+                app:checkedIconVisible="false"
+                app:chipStrokeColor="@color/login_accent"
+                app:chipStrokeWidth="1dp" />
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chipYesterday"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Ayer"
-                style="@style/Widget.MaterialComponents.Chip.Choice" />
+                style="@style/Widget.MaterialComponents.Chip.Choice"
+                app:chipBackgroundColor="@color/chip_background_selector"
+                app:checkedIconVisible="false"
+                app:chipStrokeColor="@color/login_accent"
+                app:chipStrokeWidth="1dp" />
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chipWeek"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Esta Semana"
-                style="@style/Widget.MaterialComponents.Chip.Choice" />
+                style="@style/Widget.MaterialComponents.Chip.Choice"
+                app:chipBackgroundColor="@color/chip_background_selector"
+                app:checkedIconVisible="false"
+                app:chipStrokeColor="@color/login_accent"
+                app:chipStrokeWidth="1dp" />
 
         </com.google.android.material.chip.ChipGroup>
 

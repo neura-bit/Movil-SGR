@@ -8,34 +8,27 @@ import android.os.Bundle
 import android.view.MenuItem
 import android.view.View
 import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import com.example.soprintsgr.data.ActiveTaskManager
 import com.example.soprintsgr.data.LocationService
 import com.example.soprintsgr.data.SessionManager
 import com.example.soprintsgr.data.TaskRepository
 import com.example.soprintsgr.data.api.RetrofitClient
 import com.example.soprintsgr.data.api.Task
 import com.example.soprintsgr.ui.login.LoginActivity
-import com.example.soprintsgr.ui.tasks.TasksActivity
+import com.example.soprintsgr.ui.tasks.TaskAdapter
 import com.example.soprintsgr.ui.tasks.TaskInProgressActivity
-import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.android.gms.location.LocationServices
-import com.google.android.gms.maps.CameraUpdateFactory
-import com.google.android.gms.maps.GoogleMap
-import com.google.android.gms.maps.OnMapReadyCallback
-import com.google.android.gms.maps.SupportMapFragment
-import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.MapStyleOptions
-import com.google.android.gms.maps.model.Marker
-import com.google.android.gms.maps.model.MarkerOptions
-import com.google.android.gms.maps.model.BitmapDescriptorFactory
-import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.navigation.NavigationView
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -43,23 +36,37 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import com.example.soprintsgr.data.LocationRepository
-import com.example.soprintsgr.data.api.Messenger
+import com.google.android.material.chip.Chip
+import com.google.android.material.chip.ChipGroup
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
 
-class MainActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnNavigationItemSelectedListener {
+class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
 
-    private lateinit var map: GoogleMap
     private lateinit var drawerLayout: DrawerLayout
-    private lateinit var fusedLocationClient: FusedLocationProviderClient
+    private lateinit var recyclerView: RecyclerView
+    private lateinit var swipeRefreshLayout: SwipeRefreshLayout
+    private lateinit var emptyStateContainer: LinearLayout
+    private lateinit var progressBar: ProgressBar
+    private lateinit var taskAdapter: TaskAdapter
     private lateinit var sessionManager: SessionManager
-    private var isDarkTheme = false
-    private var messengerJob: Job? = null
+    private lateinit var activeTaskManager: ActiveTaskManager
+    
     private var taskJob: Job? = null
-    private val messengerMarkers = mutableMapOf<Int, Marker>()
-    private val taskMarkers = mutableMapOf<Int, Marker>()
-    private lateinit var activeTaskManager: com.example.soprintsgr.data.ActiveTaskManager
     private var bannerTimerJob: Job? = null
     private var bannerView: View? = null
+    private lateinit var overdueAlertBanner: LinearLayout
+    private lateinit var tvOverdueCount: TextView
+    
+    // Filter state
+    private var allTasks: List<Task> = emptyList()
+    private var currentFilter: DateFilter = DateFilter.ALL
+    
+    private enum class DateFilter {
+        ALL, TODAY, FUTURE
+    }
 
     private val requestPermissionLauncher =
         registerForActivityResult(
@@ -70,16 +77,13 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
             
             if (fineLocationGranted || coarseLocationGranted) {
                 startLocationService()
-                enableMyLocation()
-                getDeviceLocation()
             }
         }
     
     private val taskCompletedReceiver = object : android.content.BroadcastReceiver() {
         override fun onReceive(context: android.content.Context?, intent: Intent?) {
             if (intent?.action == "com.example.soprintsgr.TASK_COMPLETED") {
-                // Refresh task markers immediately
-                refreshTaskMarkers()
+                loadTasks()
             }
         }
     }
@@ -99,10 +103,17 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
         
         setContentView(R.layout.activity_main)
 
-        activeTaskManager = com.example.soprintsgr.data.ActiveTaskManager.getInstance(this)
+        activeTaskManager = ActiveTaskManager.getInstance(this)
 
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+        // Initialize views
         drawerLayout = findViewById(R.id.drawer_layout)
+        recyclerView = findViewById(R.id.recyclerViewTasks)
+        swipeRefreshLayout = findViewById(R.id.swipeRefreshLayout)
+        emptyStateContainer = findViewById(R.id.emptyStateContainer)
+        progressBar = findViewById(R.id.progressBar)
+        overdueAlertBanner = findViewById(R.id.overdueAlertBanner)
+        tvOverdueCount = findViewById(R.id.tvOverdueCount)
+        
         val navView: NavigationView = findViewById(R.id.nav_view)
         navView.setNavigationItemSelectedListener(this)
         
@@ -122,23 +133,25 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
             drawerLayout.openDrawer(GravityCompat.START)
         }
 
-        val mapFragment = supportFragmentManager
-            .findFragmentById(R.id.map) as SupportMapFragment
-        mapFragment.getMapAsync(this)
-
-        val fabThemeToggle: FloatingActionButton = findViewById(R.id.fab_theme_toggle)
-        fabThemeToggle.setOnClickListener {
-            toggleMapTheme()
+        // Setup RecyclerView
+        setupRecyclerView()
+        
+        // Setup SwipeRefresh
+        swipeRefreshLayout.setColorSchemeColors(
+            ContextCompat.getColor(this, R.color.login_accent)
+        )
+        swipeRefreshLayout.setOnRefreshListener {
+            loadTasks()
         }
 
-        // Setup Center Location FAB
-        val fabCenterLocation: FloatingActionButton = findViewById(R.id.fab_center_location)
-        fabCenterLocation.setOnClickListener {
-            centerOnMyLocation()
-        }
+        // Setup filter chips
+        setupFilterChips()
 
         checkPermissionsAndStartService()
         setupActiveTaskBanner()
+        
+        // Load tasks
+        loadTasks()
         
         // Register broadcast receiver for task completion
         val filter = android.content.IntentFilter("com.example.soprintsgr.TASK_COMPLETED")
@@ -146,6 +159,341 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
             registerReceiver(taskCompletedReceiver, filter, android.content.Context.RECEIVER_NOT_EXPORTED)
         } else {
             registerReceiver(taskCompletedReceiver, filter)
+        }
+    }
+
+    private fun setupRecyclerView() {
+        taskAdapter = TaskAdapter(emptyList()) { task ->
+            onTaskClicked(task)
+        }
+        
+        recyclerView.apply {
+            layoutManager = LinearLayoutManager(this@MainActivity)
+            adapter = taskAdapter
+        }
+    }
+
+    private fun setupFilterChips() {
+        val chipTodas = findViewById<Chip>(R.id.chipTodas)
+        val chipMiDia = findViewById<Chip>(R.id.chipMiDia)
+        val chipFuturas = findViewById<Chip>(R.id.chipFuturas)
+
+        chipTodas.setOnClickListener {
+            currentFilter = DateFilter.ALL
+            applyFilter()
+        }
+
+        chipMiDia.setOnClickListener {
+            currentFilter = DateFilter.TODAY
+            applyFilter()
+        }
+
+        chipFuturas.setOnClickListener {
+            currentFilter = DateFilter.FUTURE
+            applyFilter()
+        }
+    }
+
+    private fun applyFilter() {
+        val filteredTasks = when (currentFilter) {
+            DateFilter.ALL -> allTasks
+            DateFilter.TODAY -> filterTasksForToday(allTasks)
+            DateFilter.FUTURE -> filterTasksForFuture(allTasks)
+        }
+
+        // Sort tasks by fechaLimite (earliest first, overdue at top)
+        val sortedTasks = sortTasksByDate(filteredTasks)
+
+        if (sortedTasks.isEmpty()) {
+            recyclerView.visibility = View.GONE
+            emptyStateContainer.visibility = View.VISIBLE
+        } else {
+            recyclerView.visibility = View.VISIBLE
+            emptyStateContainer.visibility = View.GONE
+            taskAdapter.submitList(sortedTasks)
+        }
+    }
+
+    private fun filterTasksForToday(tasks: List<Task>): List<Task> {
+        val today = Calendar.getInstance()
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val todayString = dateFormat.format(today.time)
+
+        return tasks.filter { task ->
+            try {
+                val taskDate = task.fechaLimite.substring(0, 10) // Extract date part
+                taskDate == todayString
+            } catch (e: Exception) {
+                false
+            }
+        }
+    }
+
+    private fun filterTasksForFuture(tasks: List<Task>): List<Task> {
+        val today = Calendar.getInstance()
+        today.set(Calendar.HOUR_OF_DAY, 0)
+        today.set(Calendar.MINUTE, 0)
+        today.set(Calendar.SECOND, 0)
+        today.set(Calendar.MILLISECOND, 0)
+
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+
+        return tasks.filter { task ->
+            try {
+                val taskDateString = task.fechaLimite.substring(0, 10)
+                val taskDate = dateFormat.parse(taskDateString)
+                taskDate != null && taskDate.after(today.time)
+            } catch (e: Exception) {
+                false
+            }
+        }
+    }
+
+    private fun sortTasksByDate(tasks: List<Task>): List<Task> {
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
+        val now = Date()
+        
+        return tasks.sortedWith(compareBy { task ->
+            try {
+                val fechaLimite = dateFormat.parse(task.fechaLimite)
+                fechaLimite?.time ?: Long.MAX_VALUE
+            } catch (e: Exception) {
+                // Try alternative format
+                try {
+                    val altFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+                    altFormat.parse(task.fechaLimite)?.time ?: Long.MAX_VALUE
+                } catch (e2: Exception) {
+                    Long.MAX_VALUE
+                }
+            }
+        })
+    }
+
+    private fun onTaskClicked(task: Task) {
+        // Check if there's already an active task
+        if (activeTaskManager.hasActiveTask()) {
+            val activeTask = activeTaskManager.getActiveTask()
+            if (activeTask?.idTarea == task.idTarea) {
+                // Navigate to active task
+                val intent = Intent(this, TaskInProgressActivity::class.java)
+                startActivity(intent)
+            } else {
+                // Show message that there's already an active task
+                Toast.makeText(
+                    this,
+                    "Ya tienes una tarea en proceso. Finalízala antes de iniciar otra.",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+            return
+        }
+        
+        // Show task details dialog
+        showTaskDetails(task)
+    }
+
+    private fun showTaskDetails(task: Task) {
+        val dialogView = layoutInflater.inflate(R.layout.dialog_task_details, null)
+        
+        // Bind data to views
+        val tvTaskTitle = dialogView.findViewById<TextView>(R.id.tvTaskTitle)
+        val tvTaskEstado = dialogView.findViewById<TextView>(R.id.tvTaskEstado)
+        val tvClienteNombre = dialogView.findViewById<TextView>(R.id.tvClienteNombre)
+        val tvClienteDireccion = dialogView.findViewById<TextView>(R.id.tvClienteDireccion)
+        val tvClienteTelefono = dialogView.findViewById<TextView>(R.id.tvClienteTelefono)
+        val btnCallPhone = dialogView.findViewById<android.widget.ImageButton>(R.id.btnCallPhone)
+        val tvTipoOperacion = dialogView.findViewById<TextView>(R.id.tvTipoOperacion)
+        val tvCategoria = dialogView.findViewById<TextView>(R.id.tvCategoria)
+        val tvFechaLimite = dialogView.findViewById<TextView>(R.id.tvFechaLimite)
+        val layoutComentario = dialogView.findViewById<View>(R.id.layoutComentario)
+        val tvComentario = dialogView.findViewById<TextView>(R.id.tvComentario)
+        val btnIniciarTarea = dialogView.findViewById<com.google.android.material.button.MaterialButton>(R.id.btnIniciarTarea)
+        
+        // Set task data
+        tvTaskTitle.text = task.nombre
+        tvTaskEstado.text = task.estadoTarea.nombre
+        
+        // Set estado background color
+        tvTaskEstado.setBackgroundColor(getTaskEstadoColor(task.estadoTarea.nombre))
+        
+        // Set cliente data
+        tvClienteNombre.text = task.cliente.nombre
+        tvClienteDireccion.text = task.cliente.direccion
+        tvClienteTelefono.text = task.cliente.telefono
+        
+        // Set task details
+        tvTipoOperacion.text = task.tipoOperacion.nombre
+        tvCategoria.text = task.categoria.nombre
+        tvFechaLimite.text = task.fechaLimite
+        
+        // Show comentario if exists
+        if (!task.comentario.isNullOrEmpty()) {
+            layoutComentario.visibility = View.VISIBLE
+            tvComentario.text = task.comentario
+        } else {
+            layoutComentario.visibility = View.GONE
+        }
+        
+        // Create dialog first
+        val dialog = androidx.appcompat.app.AlertDialog.Builder(this)
+            .setView(dialogView)
+            .create()
+        
+        // Set phone call click listener
+        btnCallPhone.setOnClickListener {
+            val intent = Intent(Intent.ACTION_DIAL)
+            intent.data = android.net.Uri.parse("tel:${task.cliente.telefono}")
+            startActivity(intent)
+        }
+        
+        // Make address clickable to open maps
+        tvClienteDireccion.setOnClickListener {
+            val uri = android.net.Uri.parse("geo:${task.cliente.latitud},${task.cliente.longitud}?q=${task.cliente.latitud},${task.cliente.longitud}(${task.cliente.nombre})")
+            val mapIntent = Intent(Intent.ACTION_VIEW, uri)
+            mapIntent.setPackage("com.google.android.apps.maps")
+            if (mapIntent.resolveActivity(packageManager) != null) {
+                startActivity(mapIntent)
+            } else {
+                // If Google Maps is not installed, open in browser
+                val browserIntent = Intent(Intent.ACTION_VIEW, 
+                    android.net.Uri.parse("https://www.google.com/maps/search/?api=1&query=${task.cliente.latitud},${task.cliente.longitud}"))
+                startActivity(browserIntent)
+            }
+        }
+        
+        // Show and configure btnIniciarTarea based on task state
+        btnIniciarTarea.visibility = View.VISIBLE
+        
+        if (task.estadoTarea.nombre.uppercase() == "EN PROCESO" || task.estadoTarea.nombre.uppercase() == "EN_PROCESO") {
+            btnIniciarTarea.text = "Continuar Tarea"
+            btnIniciarTarea.setBackgroundColor(android.graphics.Color.parseColor("#FF9800"))
+            btnIniciarTarea.setOnClickListener {
+                dialog.dismiss()
+                val intent = Intent(this, TaskInProgressActivity::class.java)
+                startActivity(intent)
+            }
+        } else {
+            btnIniciarTarea.text = "Iniciar Tarea"
+            btnIniciarTarea.setOnClickListener {
+                dialog.dismiss()
+                iniciarTarea(task)
+            }
+        }
+        
+        // Show dialog
+        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+        dialog.show()
+    }
+
+    private fun iniciarTarea(task: Task) {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val response = RetrofitClient.api.iniciarTarea(task.idTarea)
+                withContext(Dispatchers.Main) {
+                    if (response.isSuccessful) {
+                        // Save active task
+                        activeTaskManager.startTask(task)
+                        
+                        // Navigate to TaskInProgressActivity
+                        val intent = Intent(this@MainActivity, TaskInProgressActivity::class.java)
+                        startActivity(intent)
+                    } else {
+                        Toast.makeText(
+                            this@MainActivity,
+                            "Error al iniciar la tarea",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(
+                        this@MainActivity,
+                        "Error de conexión: ${e.message}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
+        }
+    }
+
+    private fun getTaskEstadoColor(estado: String): Int {
+        return when (estado.uppercase()) {
+            "CREADA" -> android.graphics.Color.parseColor("#4CAF50") // Green
+            "EN_PROCESO", "EN PROCESO" -> android.graphics.Color.parseColor("#FF9800") // Orange
+            "COMPLETADA" -> android.graphics.Color.parseColor("#2196F3") // Blue
+            "CANCELADA" -> android.graphics.Color.parseColor("#9E9E9E") // Gray
+            else -> android.graphics.Color.parseColor("#607D8B") // Default gray
+        }
+    }
+
+    private fun loadTasks() {
+        progressBar.visibility = View.VISIBLE
+        emptyStateContainer.visibility = View.GONE
+        
+        taskJob?.cancel()
+        taskJob = CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val taskRepository = TaskRepository(this@MainActivity)
+                val tasks = taskRepository.getMyTasks()
+                
+                // Filter out completed tasks
+                val activeTasks = tasks.filter { 
+                    it.estadoTarea.nombre.uppercase() != "COMPLETADA" 
+                }
+                
+                withContext(Dispatchers.Main) {
+                    progressBar.visibility = View.GONE
+                    swipeRefreshLayout.isRefreshing = false
+                    
+                    // Store all active tasks
+                    allTasks = activeTasks
+                    
+                    // Check for overdue tasks
+                    checkOverdueTasks(activeTasks)
+                    
+                    // Apply current filter
+                    applyFilter()
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    progressBar.visibility = View.GONE
+                    swipeRefreshLayout.isRefreshing = false
+                    Toast.makeText(
+                        this@MainActivity,
+                        "Error al cargar tareas: ${e.message}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
+        }
+    }
+
+    private fun checkOverdueTasks(tasks: List<Task>) {
+        val now = Calendar.getInstance()
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
+        
+        val overdueTasks = tasks.filter { task ->
+            try {
+                val fechaLimite = dateFormat.parse(task.fechaLimite)
+                fechaLimite != null && fechaLimite.before(now.time)
+            } catch (e: Exception) {
+                // Try alternative format without 'T'
+                try {
+                    val altFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+                    val fechaLimite = altFormat.parse(task.fechaLimite)
+                    fechaLimite != null && fechaLimite.before(now.time)
+                } catch (e2: Exception) {
+                    false
+                }
+            }
+        }
+        
+        if (overdueTasks.isNotEmpty()) {
+            overdueAlertBanner.visibility = View.VISIBLE
+            tvOverdueCount.text = overdueTasks.size.toString()
+        } else {
+            overdueAlertBanner.visibility = View.GONE
         }
     }
 
@@ -226,406 +574,18 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
         } else {
             hideActiveTaskBanner()
         }
-    }
-
-    override fun onMapReady(googleMap: GoogleMap) {
-        map = googleMap
-        enableMyLocation()
-        getDeviceLocation()
-        
-        // Apply clean map style by default (removes POIs and clutter)
-        applyCleanMapStyle()
-
-        startMessengerUpdates()
-        startTaskUpdates()
-        
-        map.setOnMarkerClickListener { marker ->
-            val messenger = marker.tag as? Messenger
-            if (messenger != null) {
-                showMessengerDetails(messenger)
-                return@setOnMarkerClickListener false
-            }
-            
-            val task = marker.tag as? Task
-            if (task != null) {
-                showTaskDetails(task)
-                return@setOnMarkerClickListener false
-            }
-            
-            false
-        }
-    }
-
-    private fun startMessengerUpdates() {
-        // Only show other messengers for ADMIN and ASESOR roles
-        val userRole = sessionManager.getRol()
-        if (userRole == "MENSAJERO") {
-            // Messengers should not see other messengers, only their own location
-            return
-        }
-        
-        messengerJob?.cancel()
-        messengerJob = CoroutineScope(Dispatchers.IO).launch {
-            val locationRepository = LocationRepository(this@MainActivity)
-            while (true) {
-                val messengers = locationRepository.getMessengers()
-                withContext(Dispatchers.Main) {
-                    updateMessengerMarkers(messengers)
-                }
-                delay(30000) // Update every 30 seconds
-            }
-        }
-    }
-
-    private fun updateMessengerMarkers(messengers: List<Messenger>) {
-        // Remove markers for messengers that are no longer active (optional, depending on requirements)
-        // For now, we just update or add
-        
-        for (messenger in messengers) {
-            val position = LatLng(messenger.latitud, messenger.longitud)
-            val existingMarker = messengerMarkers[messenger.idMensajero]
-
-            if (existingMarker != null) {
-                existingMarker.position = position
-                existingMarker.tag = messenger // Update tag with latest data
-            } else {
-                val marker = map.addMarker(
-                    MarkerOptions()
-                        .position(position)
-                        .title(messenger.nombreCompleto)
-                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE))
-                )
-                if (marker != null) {
-                    marker.tag = messenger
-                    messengerMarkers[messenger.idMensajero] = marker
-                }
-            }
-        }
-    }
-
-    private fun showMessengerDetails(messenger: Messenger) {
-        val message = """
-            Nombre: ${messenger.nombreCompleto}
-            Tarea: ${messenger.nombreTareaActual}
-            Actualizado: ${messenger.fechaUltimaActualizacion}
-        """.trimIndent()
-
-        androidx.appcompat.app.AlertDialog.Builder(this)
-            .setTitle("Detalles del Mensajero")
-            .setMessage(message)
-            .setPositiveButton("OK", null)
-            .show()
-    }
-
-    fun startTaskUpdates() {
-        taskJob?.cancel()
-        taskJob = CoroutineScope(Dispatchers.IO).launch {
-            val taskRepository = TaskRepository(this@MainActivity)
-            while (true) {
-                val tasks = taskRepository.getMyTasks()
-                withContext(Dispatchers.Main) {
-                    updateTaskMarkers(tasks)
-                }
-                delay(600000) // 10 minutes = 600000 ms
-            }
-        }
-    }
-
-    private fun updateTaskMarkers(tasks: List<Task>) {
-        // Remove all existing task markers
-        taskMarkers.values.forEach { it.remove() }
-        taskMarkers.clear()
-        
-        val activeTasks = mutableListOf<Task>()
-        
-        // Add new task markers (exclude completed tasks)
-        for (task in tasks) {
-            // Skip completed tasks
-            if (task.estadoTarea.nombre.uppercase() == "COMPLETADA") {
-                continue
-            }
-            
-            activeTasks.add(task)
-            
-            val position = LatLng(task.cliente.latitud, task.cliente.longitud)
-            
-            // Use custom icon for task markers (scaled to 4% = 96% smaller)
-            val icon = try {
-                val bitmap = android.graphics.BitmapFactory.decodeResource(resources, R.drawable.icon)
-                val scaledBitmap = android.graphics.Bitmap.createScaledBitmap(
-                    bitmap,
-                    (bitmap.width * 0.04).toInt(),
-                    (bitmap.height * 0.04).toInt(),
-                    false
-                )
-                BitmapDescriptorFactory.fromBitmap(scaledBitmap)
-            } catch (e: Exception) {
-                // Fallback to colored markers if icon not found
-                val markerColor = getTaskMarkerColor(task.estadoTarea.nombre)
-                BitmapDescriptorFactory.defaultMarker(markerColor)
-            }
-            
-            val marker = map.addMarker(
-                MarkerOptions()
-                    .position(position)
-                    .title("${task.nombre}")
-                    .snippet("${task.cliente.nombre} - ${task.tipoOperacion.nombre}")
-                    .icon(icon)
-            )
-            
-            if (marker != null) {
-                marker.tag = task
-                taskMarkers[task.idTarea] = marker
-            }
-        }
-        
-        // Center camera on nearest task on first load
-        if (activeTasks.isNotEmpty() && taskMarkers.size == activeTasks.size) {
-            centerOnNearestTask(activeTasks)
-        }
-    }
-
-    private fun getTaskMarkerColor(estado: String): Float {
-        return when (estado.uppercase()) {
-            "CREADA" -> BitmapDescriptorFactory.HUE_GREEN
-            "EN_PROCESO", "EN PROCESO" -> BitmapDescriptorFactory.HUE_YELLOW
-            "CANCELADA" -> BitmapDescriptorFactory.HUE_AZURE // Gray-ish
-            else -> BitmapDescriptorFactory.HUE_ORANGE
-        }
-    }
-
-    private fun centerOnNearestTask(tasks: List<Task>) {
-        try {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
-                ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
-            ) {
-                fusedLocationClient.lastLocation.addOnSuccessListener { location ->
-                    if (location != null) {
-                        val currentLatLng = LatLng(location.latitude, location.longitude)
-                        
-                        // Find nearest task
-                        var nearestTask: Task? = null
-                        var minDistance = Float.MAX_VALUE
-                        
-                        for (task in tasks) {
-                            val taskLatLng = LatLng(task.cliente.latitud, task.cliente.longitud)
-                            val results = FloatArray(1)
-                            android.location.Location.distanceBetween(
-                                currentLatLng.latitude, currentLatLng.longitude,
-                                taskLatLng.latitude, taskLatLng.longitude,
-                                results
-                            )
-                            
-                            if (results[0] < minDistance) {
-                                minDistance = results[0]
-                                nearestTask = task
-                            }
-                        }
-                        
-                        // Center camera to show both current location and nearest task
-                        nearestTask?.let {
-                            val taskPosition = LatLng(it.cliente.latitud, it.cliente.longitud)
-                            
-                            // Create bounds that include both points
-                            val boundsBuilder = com.google.android.gms.maps.model.LatLngBounds.Builder()
-                            boundsBuilder.include(currentLatLng)
-                            boundsBuilder.include(taskPosition)
-                            val bounds = boundsBuilder.build()
-                            
-                            // Add more padding for better centering (not at corners)
-                            val padding = 400 // padding in pixels
-                            val cameraUpdate = CameraUpdateFactory.newLatLngBounds(bounds, padding)
-                            map.animateCamera(cameraUpdate)
-                        }
-                    }
-                }
-            }
-        } catch (e: SecurityException) {
-            // Log error
-        }
-    }
-
-    private fun showTaskDetails(task: Task) {
-        // Inflate the custom layout
-        val dialogView = layoutInflater.inflate(R.layout.dialog_task_details, null)
-        
-        // Bind data to views
-        val tvTaskTitle = dialogView.findViewById<TextView>(R.id.tvTaskTitle)
-        val tvTaskEstado = dialogView.findViewById<TextView>(R.id.tvTaskEstado)
-        val tvClienteNombre = dialogView.findViewById<TextView>(R.id.tvClienteNombre)
-        val tvClienteDireccion = dialogView.findViewById<TextView>(R.id.tvClienteDireccion)
-        val tvClienteTelefono = dialogView.findViewById<TextView>(R.id.tvClienteTelefono)
-        val btnCallPhone = dialogView.findViewById<android.widget.ImageButton>(R.id.btnCallPhone)
-        val tvTipoOperacion = dialogView.findViewById<TextView>(R.id.tvTipoOperacion)
-        val tvCategoria = dialogView.findViewById<TextView>(R.id.tvCategoria)
-        val tvFechaLimite = dialogView.findViewById<TextView>(R.id.tvFechaLimite)
-        val layoutComentario = dialogView.findViewById<View>(R.id.layoutComentario)
-        val tvComentario = dialogView.findViewById<TextView>(R.id.tvComentario)
-        val btnOpenMap = dialogView.findViewById<com.google.android.material.button.MaterialButton>(R.id.btnOpenMap)
-        val btnFinalizar = dialogView.findViewById<com.google.android.material.button.MaterialButton>(R.id.btnFinalizar)
-        
-        // Set task data
-        tvTaskTitle.text = task.nombre
-        tvTaskEstado.text = task.estadoTarea.nombre
-        
-        // Set estado background color
-        tvTaskEstado.setBackgroundColor(getTaskEstadoColor(task.estadoTarea.nombre))
-        
-        // Set cliente data
-        tvClienteNombre.text = task.cliente.nombre
-        tvClienteDireccion.text = task.cliente.direccion
-        tvClienteTelefono.text = task.cliente.telefono
-        
-        // Set task details
-        tvTipoOperacion.text = task.tipoOperacion.nombre
-        tvCategoria.text = task.categoria.nombre
-        tvFechaLimite.text = task.fechaLimite
-        
-        // Show comentario if exists
-        if (!task.comentario.isNullOrEmpty()) {
-            layoutComentario.visibility = View.VISIBLE
-            tvComentario.text = task.comentario
-        } else {
-            layoutComentario.visibility = View.GONE
-        }
-        
-        // Create dialog first
-        val dialog = androidx.appcompat.app.AlertDialog.Builder(this)
-            .setView(dialogView)
-            .setPositiveButton("Cerrar", null)
-            .create()
-        
-        // Set phone call click listener
-        btnCallPhone.setOnClickListener {
-            val intent = Intent(Intent.ACTION_DIAL)
-            intent.data = android.net.Uri.parse("tel:${task.cliente.telefono}")
-            startActivity(intent)
-        }
-        
-        // Set open map click listener - center on task location
-        btnOpenMap.setOnClickListener {
-            val position = LatLng(task.cliente.latitud, task.cliente.longitud)
-            map.animateCamera(CameraUpdateFactory.newLatLngZoom(position, 17f))
-            dialog.dismiss()
-        }
-        
-        // Hide finalizar button in map view (only show in TasksActivity)
-        btnFinalizar.visibility = View.GONE
-        
-        // Show dialog
-        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
-        dialog.show()
-    }
-
-    private fun getTaskEstadoColor(estado: String): Int {
-        return when (estado.uppercase()) {
-            "CREADA" -> android.graphics.Color.parseColor("#4CAF50") // Green
-            "EN_PROCESO", "EN PROCESO" -> android.graphics.Color.parseColor("#FF9800") // Orange
-            "COMPLETADA" -> android.graphics.Color.parseColor("#2196F3") // Blue
-            "CANCELADA" -> android.graphics.Color.parseColor("#9E9E9E") // Gray
-            else -> android.graphics.Color.parseColor("#607D8B") // Default gray
-        }
-    }
-
-    private fun refreshTaskMarkers() {
-        CoroutineScope(Dispatchers.IO).launch {
-            val taskRepository = TaskRepository(this@MainActivity)
-            val tasks = taskRepository.getMyTasks()
-            withContext(Dispatchers.Main) {
-                updateTaskMarkers(tasks)
-            }
-        }
+        // Reload tasks
+        loadTasks()
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        messengerJob?.cancel()
         taskJob?.cancel()
         bannerTimerJob?.cancel()
         try {
             unregisterReceiver(taskCompletedReceiver)
         } catch (e: Exception) {
             // Receiver not registered
-        }
-    }
-
-    private fun enableMyLocation() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
-            ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
-        ) {
-            if (::map.isInitialized) {
-                map.isMyLocationEnabled = true
-                map.uiSettings.isMyLocationButtonEnabled = true // Enable location button
-            }
-        }
-    }
-
-    private fun getDeviceLocation() {
-        try {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
-                ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
-            ) {
-                val locationResult = fusedLocationClient.lastLocation
-                locationResult.addOnCompleteListener(this) { task ->
-                    if (task.isSuccessful) {
-                        val lastKnownLocation = task.result
-                        if (lastKnownLocation != null) {
-                            map.moveCamera(
-                                CameraUpdateFactory.newLatLngZoom(
-                                    LatLng(lastKnownLocation.latitude, lastKnownLocation.longitude), 15f
-                                )
-                            )
-                        }
-                    } else {
-                        map.moveCamera(CameraUpdateFactory.newLatLngZoom(LatLng(-0.1807, -78.4678), 15f)) // Default to Quito
-                        map.uiSettings.isMyLocationButtonEnabled = false
-                    }
-                }
-            }
-        } catch (e: SecurityException) {
-            // Log error
-        }
-    }
-
-
-
-    private fun applyCleanMapStyle() {
-        if (!::map.isInitialized) return
-
-        try {
-            val success = map.setMapStyle(
-                MapStyleOptions.loadRawResourceStyle(
-                    this, R.raw.map_style_clean
-                )
-            )
-            if (!success) {
-                // Log error - style couldn't be applied
-            }
-        } catch (e: Exception) {
-            // Log error - exception loading style
-        }
-    }
-
-    private fun toggleMapTheme() {
-        if (!::map.isInitialized) return
-
-        isDarkTheme = !isDarkTheme
-        if (isDarkTheme) {
-            try {
-                val success = map.setMapStyle(
-                    MapStyleOptions.loadRawResourceStyle(
-                        this, R.raw.map_style_dark
-                    )
-                )
-                if (!success) {
-                    // Log error
-                }
-            } catch (e: Exception) {
-                // Log error
-            }
-        } else {
-            // Apply clean style instead of default
-            applyCleanMapStyle()
         }
     }
 
@@ -643,11 +603,11 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
         if (!fotoPerfilUrl.isNullOrEmpty()) {
             com.bumptech.glide.Glide.with(this)
                 .load(fotoPerfilUrl)
-                .placeholder(R.drawable.logotipo)
-                .error(R.drawable.logotipo)
+                .placeholder(R.drawable.ic_logo_header)
+                .error(R.drawable.ic_logo_header)
                 .into(ivProfilePhoto)
         } else {
-            ivProfilePhoto.setImageResource(R.drawable.logotipo)
+            ivProfilePhoto.setImageResource(R.drawable.ic_logo_header)
         }
     }
     
@@ -658,35 +618,12 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
         finish()
     }
 
-    private fun centerOnMyLocation() {
-        if (!::map.isInitialized) return
-        
-        try {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
-                ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
-            ) {
-                fusedLocationClient.lastLocation.addOnSuccessListener { location ->
-                    if (location != null) {
-                        val currentLatLng = LatLng(location.latitude, location.longitude)
-                        map.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 16f))
-                    }
-                }
-            }
-        } catch (e: SecurityException) {
-            // Log error
-        }
-    }
-
     override fun onNavigationItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.nav_home -> {
-                // Handle Home
+                // Already on home, just close drawer
             }
-            R.id.nav_tasks -> {
-                val intent = Intent(this, TasksActivity::class.java)
-                startActivity(intent)
-            }
-            R.id.nav_deliveries -> {
+            R.id.nav_history -> {
                 val intent = Intent(this, com.example.soprintsgr.ui.completed.CompletedTasksActivity::class.java)
                 startActivity(intent)
             }
@@ -714,8 +651,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
             requestPermissionLauncher.launch(permissionsToRequest.toTypedArray())
         } else {
             startLocationService()
-            enableMyLocation()
-            getDeviceLocation()
         }
     }
 

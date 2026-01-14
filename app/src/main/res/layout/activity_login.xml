@@ -42,8 +42,8 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:paddingTop="80dp"
-                    android:paddingBottom="80dp"
+                    android:paddingTop="40dp"
+                    android:paddingBottom="40dp"
                     android:paddingStart="28dp"
                     android:paddingEnd="28dp">
 
@@ -54,7 +54,7 @@
                         android:layout_height="120dp"
                         android:layout_gravity="center_horizontal"
                         android:adjustViewBounds="true"
-                        android:src="@drawable/logotipo"
+                        android:src="@drawable/logo_ubika"
                         android:scaleType="fitCenter"
                         android:contentDescription="@string/app_name"
                         android:layout_marginBottom="24dp" />

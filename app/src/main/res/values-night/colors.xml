@@ -10,4 +10,7 @@
     <color name="task_divider">#424242</color>
     <color name="task_header_overlay">@color/black</color>
     <color name="task_action_text_accent">@color/login_accent</color>
+
+    <!-- Chip Colors -->
+    <color name="chip_unselected">#2C2C2C</color> <!-- Dark gray for unselected chips in dark mode -->
 </resources>

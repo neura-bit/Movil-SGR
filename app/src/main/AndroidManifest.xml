@@ -43,7 +43,8 @@
 
         <activity
             android:name=".ui.login.LoginActivity"
-            android:exported="true">
+            android:exported="true"
+            android:windowSoftInputMode="adjustPan">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -52,10 +53,6 @@
         <activity
             android:name=".MainActivity"
             android:exported="false" />
-        <activity
-            android:name=".ui.tasks.TasksActivity"
-            android:exported="false"
-            android:parentActivityName=".MainActivity" />
         <activity
             android:name=".ui.tasks.TaskInProgressActivity"
             android:exported="false"

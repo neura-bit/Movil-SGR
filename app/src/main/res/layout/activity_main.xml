@@ -10,14 +10,10 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:background="@color/task_background"
         android:fitsSystemWindows="true">
 
-        <fragment
-            android:id="@+id/map"
-            android:name="com.google.android.gms.maps.SupportMapFragment"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent" />
-
+        <!-- Header -->
         <LinearLayout
             android:id="@+id/header_container"
             android:layout_width="match_parent"
@@ -39,7 +35,7 @@
                 android:src="@drawable/ic_menu"
                 android:padding="8dp"
                 app:tint="@color/login_accent"
-                android:contentDescription="Menu"
+                android:contentDescription="@string/menu"
                 android:clickable="true"
                 android:focusable="true"
                 android:background="@drawable/menu_button_background"/>
@@ -50,11 +46,11 @@
                 android:layout_height="32dp"
                 android:layout_weight="1"
                 android:src="@drawable/ic_logo_header"
-                android:contentDescription="Logo"
+                android:contentDescription="@string/logo"
                 android:layout_gravity="center"
                 android:scaleType="fitCenter"/>
 
-            <!-- Status Indicator (Moved from map) -->
+            <!-- Status Indicator -->
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -75,7 +71,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="En línea"
+                    android:text="@string/en_linea"
                     android:textColor="@color/status_online_green"
                     android:textSize="12sp"
                     android:textStyle="bold"/>
@@ -93,35 +89,180 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
 
-        <!-- FAB to Center on My Location (Above Theme Toggle) -->
-        <com.google.android.material.floatingactionbutton.FloatingActionButton
-            android:id="@+id/fab_center_location"
-            android:layout_width="wrap_content"
+        <!-- Overdue Tasks Alert Banner -->
+        <LinearLayout
+            android:id="@+id/overdueAlertBanner"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="16dp"
-            android:layout_marginBottom="160dp"
-            android:src="@android:drawable/ic_menu_mylocation"
-            android:contentDescription="Center Location"
-            app:backgroundTint="@color/login_accent"
-            app:tint="@color/black"
-            app:fabSize="mini"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" />
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:padding="12dp"
+            android:background="#D32F2F"
+            android:visibility="gone"
+            app:layout_constraintTop_toBottomOf="@id/activeTaskBannerContainer"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
 
-        <!-- FAB to Toggle Map Theme -->
-        <com.google.android.material.floatingactionbutton.FloatingActionButton
-            android:id="@+id/fab_theme_toggle"
-            android:layout_width="wrap_content"
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_error"
+                android:tint="@color/white"
+                android:contentDescription="@string/alerta_tareas_retrasadas"
+                android:layout_marginEnd="12dp" />
+
+            <TextView
+                android:id="@+id/tvOverdueAlert"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/alerta_tareas_retrasadas"
+                android:textColor="@color/white"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvOverdueCount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/rounded_button"
+                android:backgroundTint="@color/white"
+                android:paddingHorizontal="12dp"
+                android:paddingVertical="4dp"
+                android:textColor="#D32F2F"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:text="0" />
+
+        </LinearLayout>
+
+        <!-- Date Filter Chips -->
+        <HorizontalScrollView
+            android:id="@+id/filterScrollView"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="16dp"
-            android:layout_marginBottom="100dp"
-            android:src="@drawable/ic_visibility"
-            android:contentDescription="Toggle Theme"
-            app:backgroundTint="@color/login_accent"
-            app:tint="@color/black"
-            app:fabSize="mini"
+            android:scrollbars="none"
+            android:paddingHorizontal="8dp"
+            android:paddingVertical="8dp"
+            android:background="@color/task_background"
+            app:layout_constraintTop_toBottomOf="@id/overdueAlertBanner"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/chipGroupFilter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:singleSelection="true"
+                app:selectionRequired="true">
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chipTodas"
+                    style="@style/Widget.MaterialComponents.Chip.Choice"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/filter_todas"
+                    android:checked="true"
+                    app:chipBackgroundColor="@color/chip_background_selector"
+                    app:checkedIconVisible="false"
+                    app:chipStrokeColor="@color/login_accent"
+                    app:chipStrokeWidth="1dp" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chipMiDia"
+                    style="@style/Widget.MaterialComponents.Chip.Choice"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/filter_mi_dia"
+                    app:chipBackgroundColor="@color/chip_background_selector"
+                    app:checkedIconVisible="false"
+                    app:chipStrokeColor="@color/login_accent"
+                    app:chipStrokeWidth="1dp" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chipFuturas"
+                    style="@style/Widget.MaterialComponents.Chip.Choice"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/filter_futuras"
+                    app:chipBackgroundColor="@color/chip_background_selector"
+                    app:checkedIconVisible="false"
+                    app:chipStrokeColor="@color/login_accent"
+                    app:chipStrokeWidth="1dp" />
+
+            </com.google.android.material.chip.ChipGroup>
+
+        </HorizontalScrollView>
+
+        <!-- Tasks List with SwipeRefresh -->
+        <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+            android:id="@+id/swipeRefreshLayout"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintTop_toBottomOf="@id/filterScrollView"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" />
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/recyclerViewTasks"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:padding="8dp"
+                    android:clipToPadding="false" />
+
+                <!-- Empty State -->
+                <LinearLayout
+                    android:id="@+id/emptyStateContainer"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:visibility="gone"
+                    android:padding="32dp">
+
+                    <ImageView
+                        android:layout_width="120dp"
+                        android:layout_height="120dp"
+                        android:src="@drawable/ic_inventory"
+                        app:tint="@color/gray"
+                        android:alpha="0.5"
+                        android:contentDescription="@string/sin_tareas"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/sin_tareas_asignadas"
+                        android:textSize="18sp"
+                        android:textColor="@color/task_text_secondary"
+                        android:textStyle="bold"
+                        android:layout_marginTop="16dp"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/desliza_para_actualizar"
+                        android:textSize="14sp"
+                        android:textColor="@color/gray"
+                        android:layout_marginTop="8dp"/>
+
+                </LinearLayout>
+
+                <!-- Loading Progress -->
+                <ProgressBar
+                    android:id="@+id/progressBar"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:visibility="gone" />
+
+            </FrameLayout>
+
+        </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

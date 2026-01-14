@@ -16,8 +16,6 @@ import com.example.soprintsgr.R
 import com.example.soprintsgr.data.TaskRepository
 import com.example.soprintsgr.data.api.Task
 import com.example.soprintsgr.ui.tasks.TaskAdapter
-import com.google.android.gms.maps.CameraUpdateFactory
-import com.google.android.gms.maps.model.LatLng
 import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipGroup
 import kotlinx.coroutines.launch
@@ -126,32 +124,50 @@ class CompletedTasksActivity : AppCompatActivity() {
     }
 
     private fun getDateRange(period: FilterPeriod): Pair<String, String> {
-        val calendar = Calendar.getInstance()
+        val calendarStart = Calendar.getInstance()
+        val calendarEnd = Calendar.getInstance()
         val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
-        
-        val fechaFin = dateFormat.format(calendar.time) // Now
         
         when (period) {
             FilterPeriod.TODAY -> {
-                calendar.set(Calendar.HOUR_OF_DAY, 0)
-                calendar.set(Calendar.MINUTE, 0)
-                calendar.set(Calendar.SECOND, 0)
+                // Start: today at 00:00:00
+                calendarStart.set(Calendar.HOUR_OF_DAY, 0)
+                calendarStart.set(Calendar.MINUTE, 0)
+                calendarStart.set(Calendar.SECOND, 0)
+                // End: today at 23:59:59
+                calendarEnd.set(Calendar.HOUR_OF_DAY, 23)
+                calendarEnd.set(Calendar.MINUTE, 59)
+                calendarEnd.set(Calendar.SECOND, 59)
             }
             FilterPeriod.YESTERDAY -> {
-                calendar.add(Calendar.DAY_OF_MONTH, -1)
-                calendar.set(Calendar.HOUR_OF_DAY, 0)
-                calendar.set(Calendar.MINUTE, 0)
-                calendar.set(Calendar.SECOND, 0)
+                // Start: yesterday at 00:00:00
+                calendarStart.add(Calendar.DAY_OF_MONTH, -1)
+                calendarStart.set(Calendar.HOUR_OF_DAY, 0)
+                calendarStart.set(Calendar.MINUTE, 0)
+                calendarStart.set(Calendar.SECOND, 0)
+                // End: yesterday at 23:59:59
+                calendarEnd.add(Calendar.DAY_OF_MONTH, -1)
+                calendarEnd.set(Calendar.HOUR_OF_DAY, 23)
+                calendarEnd.set(Calendar.MINUTE, 59)
+                calendarEnd.set(Calendar.SECOND, 59)
             }
             FilterPeriod.WEEK -> {
-                calendar.add(Calendar.DAY_OF_MONTH, -7)
-                calendar.set(Calendar.HOUR_OF_DAY, 0)
-                calendar.set(Calendar.MINUTE, 0)
-                calendar.set(Calendar.SECOND, 0)
+                // Start: 7 days ago at 00:00:00
+                calendarStart.add(Calendar.DAY_OF_MONTH, -7)
+                calendarStart.set(Calendar.HOUR_OF_DAY, 0)
+                calendarStart.set(Calendar.MINUTE, 0)
+                calendarStart.set(Calendar.SECOND, 0)
+                // End: today at 23:59:59
+                calendarEnd.set(Calendar.HOUR_OF_DAY, 23)
+                calendarEnd.set(Calendar.MINUTE, 59)
+                calendarEnd.set(Calendar.SECOND, 59)
             }
         }
         
-        val fechaInicio = dateFormat.format(calendar.time)
+        val fechaInicio = dateFormat.format(calendarStart.time)
+        val fechaFin = dateFormat.format(calendarEnd.time)
+        
+        android.util.Log.d("CompletedTasks", "Filter: $period, fechaInicio: $fechaInicio, fechaFin: $fechaFin")
         
         return Pair(fechaInicio, fechaFin)
     }
@@ -186,8 +202,7 @@ class CompletedTasksActivity : AppCompatActivity() {
         val tvFechaLimite = dialogView.findViewById<TextView>(R.id.tvFechaLimite)
         val layoutComentario = dialogView.findViewById<View>(R.id.layoutComentario)
         val tvComentario = dialogView.findViewById<TextView>(R.id.tvComentario)
-        val btnOpenMap = dialogView.findViewById<com.google.android.material.button.MaterialButton>(R.id.btnOpenMap)
-        val btnFinalizar = dialogView.findViewById<com.google.android.material.button.MaterialButton>(R.id.btnFinalizar)
+        val btnIniciarTarea = dialogView.findViewById<com.google.android.material.button.MaterialButton>(R.id.btnIniciarTarea)
         
         // Set task data
         tvTaskTitle.text = task.nombre
@@ -227,7 +242,6 @@ class CompletedTasksActivity : AppCompatActivity() {
         // Create dialog first
         val dialog = AlertDialog.Builder(this)
             .setView(dialogView)
-            .setPositiveButton("Cerrar", null)
             .create()
         
         // Set phone call click listener
@@ -237,17 +251,22 @@ class CompletedTasksActivity : AppCompatActivity() {
             startActivity(intent)
         }
         
-        // Set open map click listener - just show location
-        btnOpenMap.setOnClickListener {
+        // Make address clickable to open maps
+        tvClienteDireccion.setOnClickListener {
             val uri = "geo:${task.cliente.latitud},${task.cliente.longitud}?q=${task.cliente.latitud},${task.cliente.longitud}"
             val intent = Intent(Intent.ACTION_VIEW, Uri.parse(uri))
             intent.setPackage("com.google.android.apps.maps")
-            startActivity(intent)
-            dialog.dismiss()
+            if (intent.resolveActivity(packageManager) != null) {
+                startActivity(intent)
+            } else {
+                val browserIntent = Intent(Intent.ACTION_VIEW,
+                    Uri.parse("https://www.google.com/maps/search/?api=1&query=${task.cliente.latitud},${task.cliente.longitud}"))
+                startActivity(browserIntent)
+            }
         }
         
-        // Hide finalizar button (tasks are already completed)
-        btnFinalizar.visibility = View.GONE
+        // Hide button (tasks are already completed)
+        btnIniciarTarea.visibility = View.GONE
         
         // Show dialog
         dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)

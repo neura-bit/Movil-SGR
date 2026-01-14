@@ -52,4 +52,7 @@
     <color name="task_divider">#E0E0E0</color>
     <color name="task_header_overlay">#00000000</color> <!-- Transparent for light mode -->
     <color name="task_action_text_accent">#F57C00</color> <!-- Darker Orange for visibility on light bg -->
+
+    <!-- Chip Colors -->
+    <color name="chip_unselected">#E8E8E8</color> <!-- Light gray for unselected chips -->
 </resources>

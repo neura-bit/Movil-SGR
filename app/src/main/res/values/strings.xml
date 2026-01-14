@@ -28,4 +28,20 @@
     <string name="login_btn_enter">Ingresar</string>
     <string name="login_help_question">¿Necesitas ayuda?</string>
     <string name="login_contact_us">Contáctanos</string>
+
+    <!-- Main Activity Strings -->
+    <string name="menu">Menú</string>
+    <string name="logo">Logo</string>
+    <string name="en_linea">En línea</string>
+    <string name="sin_tareas">Sin tareas</string>
+    <string name="sin_tareas_asignadas">No tienes tareas asignadas</string>
+    <string name="desliza_para_actualizar">Desliza hacia abajo para actualizar</string>
+
+    <!-- Filter Strings -->
+    <string name="filter_todas">Todas</string>
+    <string name="filter_mi_dia">Mi día</string>
+    <string name="filter_futuras">Futuras</string>
+
+    <!-- Alert Strings -->
+    <string name="alerta_tareas_retrasadas">Tienes tareas retrasadas</string>
 </resources>

@@ -11,16 +11,6 @@ data class LocationRequest(
     val longitud: Double
 )
 
-data class Messenger(
-    val idMensajero: Int,
-    val nombreCompleto: String,
-    val idTareaActual: Int,
-    val nombreTareaActual: String,
-    val latitud: Double,
-    val longitud: Double,
-    val fechaUltimaActualizacion: String
-)
-
 data class FinalizarSinCodigoRequest(
     val idEstadoTarea: Int,
     val observacion: String
@@ -42,9 +32,6 @@ interface LocationApi {
 
     @POST("api/tracking/posicion")
     suspend fun updateLocation(@Body request: LocationRequest): Response<Void>
-
-    @retrofit2.http.GET("api/tracking/mensajeros-actual")
-    suspend fun getActiveMessengers(): Response<List<Messenger>>
 
     @retrofit2.http.GET("api/tareas/mis-tareas")
     suspend fun getMyTasks(): Response<List<Task>>
@@ -70,6 +57,6 @@ interface LocationApi {
     suspend fun getCompletedTasks(
         @retrofit2.http.Query("fechaInicio") fechaInicio: String,
         @retrofit2.http.Query("fechaFin") fechaFin: String
-    ): Response<List<Task>>
+    ): Response<List<CompletedTask>>
 }
 

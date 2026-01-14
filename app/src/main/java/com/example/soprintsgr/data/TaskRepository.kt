@@ -100,9 +100,10 @@ class TaskRepository(context: Context) {
         return try {
             val response = RetrofitClient.api.getCompletedTasks(fechaInicio, fechaFin)
             if (response.isSuccessful) {
-                val tasks = response.body() ?: emptyList()
-                Log.d(TAG, "Fetched ${tasks.size} completed tasks successfully")
-                tasks
+                val completedTasks = response.body() ?: emptyList()
+                Log.d(TAG, "Fetched ${completedTasks.size} completed tasks successfully")
+                // Convert CompletedTask to Task
+                completedTasks.map { it.toTask() }
             } else {
                 Log.e(TAG, "Failed to fetch completed tasks: ${response.code()}")
                 emptyList()

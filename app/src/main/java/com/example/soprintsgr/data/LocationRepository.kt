@@ -3,7 +3,6 @@ package com.example.soprintsgr.data
 import android.content.Context
 import android.util.Log
 import com.example.soprintsgr.data.api.LocationRequest
-import com.example.soprintsgr.data.api.Messenger
 import com.example.soprintsgr.data.api.RetrofitClient
 
 class LocationRepository(private val context: Context) {
@@ -44,21 +43,6 @@ class LocationRepository(private val context: Context) {
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error sending location", e)
-        }
-    }
-
-    suspend fun getMessengers(): List<Messenger> {
-        return try {
-            val response = RetrofitClient.api.getActiveMessengers()
-            if (response.isSuccessful) {
-                response.body() ?: emptyList()
-            } else {
-                Log.e(TAG, "Failed to fetch messengers: ${response.code()}")
-                emptyList()
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "Error fetching messengers", e)
-            emptyList()
         }
     }
 }
