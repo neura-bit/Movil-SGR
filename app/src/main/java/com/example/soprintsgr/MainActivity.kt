@@ -5,6 +5,9 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.os.PowerManager
+import android.provider.Settings
+import android.net.Uri
 import android.view.MenuItem
 import android.view.View
 import android.widget.ImageView
@@ -76,7 +79,24 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             val coarseLocationGranted = permissions[Manifest.permission.ACCESS_COARSE_LOCATION] ?: false
             
             if (fineLocationGranted || coarseLocationGranted) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    checkBackgroundLocationPermission()
+                } else {
+                    startLocationService()
+                }
+            }
+        }
+
+    private val requestBackgroundLocationLauncher =
+        registerForActivityResult(
+            ActivityResultContracts.RequestPermission()
+        ) { isGranted: Boolean ->
+            if (isGranted) {
                 startLocationService()
+            } else {
+                // We can still run with foreground permission, but warn user
+                startLocationService()
+                Toast.makeText(this, "Se recomienda permitir ubicación en segundo plano para un mejor seguimiento.", Toast.LENGTH_LONG).show()
             }
         }
     
@@ -659,7 +679,62 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         if (permissionsToRequest.isNotEmpty()) {
             requestPermissionLauncher.launch(permissionsToRequest.toTypedArray())
         } else {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                checkBatteryOptimization()
+            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                checkBackgroundLocationPermission()
+            } else {
+                startLocationService()
+            }
+        }
+    }
+
+    private fun checkBatteryOptimization() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            val powerManager = getSystemService(POWER_SERVICE) as PowerManager
+            if (!powerManager.isIgnoringBatteryOptimizations(packageName)) {
+                val intent = Intent().apply {
+                    action = Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS
+                    data = Uri.parse("package:$packageName")
+                }
+                startActivity(intent)
+                // Proceed to check background location after returning or immediately
+                // For simplicity, we can chain it, but usually user comes back.
+                // We'll rely on onResume to re-check or proceed here.
+            } else {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    checkBackgroundLocationPermission()
+                } else {
+                    startLocationService()
+                }
+            }
+        } else {
             startLocationService()
+        }
+    }
+
+    private fun checkBackgroundLocationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            if (ContextCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.ACCESS_BACKGROUND_LOCATION
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                // Show rationale
+                androidx.appcompat.app.AlertDialog.Builder(this)
+                    .setTitle("Ubicación en segundo plano")
+                    .setMessage("Para que tus supervisores puedan ver tu ruta completa incluso con la app cerrada, selecciona \"Permitir todo el tiempo\" en la siguiente pantalla.")
+                    .setPositiveButton("Entendido") { _, _ ->
+                        requestBackgroundLocationLauncher.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+                    }
+                    .setNegativeButton("Ahora no") { _, _ ->
+                        startLocationService()
+                    }
+                    .create()
+                    .show()
+            } else {
+                startLocationService()
+            }
         }
     }
 
