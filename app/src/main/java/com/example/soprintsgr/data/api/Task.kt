@@ -21,7 +21,8 @@ data class Task(
     val proceso: String,
     val fechaInicio: String,
     val codigo: String,
-    val archivosAdjuntos: List<ArchivoAdjunto>? = null
+    val archivosAdjuntos: List<ArchivoAdjunto>? = null,
+    val tiempoEjecucion: String? = null
 )
 
 data class TipoOperacion(

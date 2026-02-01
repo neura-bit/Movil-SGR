@@ -1,6 +1,7 @@
 package com.example.soprintsgr.data.api
 
-import com.google.gson.annotations.SerializedName
+
+
 
 /**
  * Model for completed tasks API response which returns flattened data
@@ -82,7 +83,8 @@ data class CompletedTask(
             proceso = proceso ?: "",
             fechaInicio = fechaInicio ?: "",
             codigo = codigo ?: "",
-            archivosAdjuntos = archivosAdjuntos
+            archivosAdjuntos = archivosAdjuntos,
+            tiempoEjecucion = tiempoEjecucion?.toString() // Convert Int? to String?
         )
     }
 }

@@ -25,7 +25,10 @@ class TaskAdapter(
         val tvNombre: TextView = view.findViewById(R.id.tvNombre)
         val tvCliente: TextView = view.findViewById(R.id.tvCliente)
         val tvTipoOperacion: TextView = view.findViewById(R.id.tvTipoOperacion)
+        val tvAsesor: TextView = view.findViewById(R.id.tvAsesor)
         val tvFechaLimite: TextView = view.findViewById(R.id.tvFechaLimite)
+        val layoutTiempoEjecucion: View = view.findViewById(R.id.layoutTiempoEjecucion)
+        val tvTiempoEjecucion: TextView = view.findViewById(R.id.tvTiempoEjecucion)
         val ivOverdueAlert: ImageView = view.findViewById(R.id.ivOverdueAlert)
         var pulseAnimator: ObjectAnimator? = null
     }
@@ -42,6 +45,7 @@ class TaskAdapter(
         holder.tvNombre.text = task.nombre
         holder.tvCliente.text = task.cliente.nombre
         holder.tvTipoOperacion.text = task.tipoOperacion.nombre
+        holder.tvAsesor.text = holder.itemView.context.getString(R.string.asesor_full_name, task.asesorCrea.nombre, task.asesorCrea.apellido)
         holder.tvEstado.text = task.estadoTarea.nombre
         
         // Format date
@@ -51,12 +55,20 @@ class TaskAdapter(
             val outputFormat = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
             fechaLimiteDate = inputFormat.parse(task.fechaLimite)
             holder.tvFechaLimite.text = fechaLimiteDate?.let { outputFormat.format(it) } ?: task.fechaLimite
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             holder.tvFechaLimite.text = task.fechaLimite
         }
         
         // Set estado background color
         holder.tvEstado.setBackgroundColor(getEstadoColor(task.estadoTarea.nombre))
+
+        // Execution time logic
+        if (!task.tiempoEjecucion.isNullOrEmpty()) {
+            holder.layoutTiempoEjecucion.visibility = View.VISIBLE
+            holder.tvTiempoEjecucion.text = holder.itemView.context.getString(R.string.execution_time_minutes, task.tiempoEjecucion)
+        } else {
+            holder.layoutTiempoEjecucion.visibility = View.GONE
+        }
         
         // Check if task is overdue - only show for non-completed tasks
         val isCompleted = task.estadoTarea.nombre.uppercase() == "COMPLETADA"
