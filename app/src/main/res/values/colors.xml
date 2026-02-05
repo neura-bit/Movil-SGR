@@ -63,4 +63,11 @@
     <color name="dialog_text_secondary">#757575</color>
     <color name="dialog_input_text">#000000</color>
     <color name="dialog_input_background">#F5F5F5</color>
+    
+    <!-- Task Status Colors -->
+    <color name="status_pending">#4CAF50</color> <!-- Green -->
+    <color name="status_in_progress">#FF9800</color> <!-- Orange -->
+    <color name="status_completed">#2196F3</color> <!-- Blue -->
+    <color name="status_canceled">#9E9E9E</color> <!-- Gray -->
+    <color name="status_default">#607D8B</color> <!-- Default Gray -->
 </resources>

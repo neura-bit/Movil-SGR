@@ -24,15 +24,16 @@ class ActiveTaskManager private constructor(context: Context) {
         }
     }
 
-    fun startTask(task: Task) {
+    fun startTask(task: Task, explicitStartTime: Long = 0L) {
         val taskJson = gson.toJson(task)
         
-        // Only set start time if there isn't one already (first time starting this task)
-        val existingStartTime = getStartTime()
-        val startTime = if (existingStartTime > 0L) {
-            existingStartTime // Keep existing start time
+        // Use explicit start time if provided, otherwise perform logic
+        val startTime = if (explicitStartTime > 0L) {
+            explicitStartTime
         } else {
-            System.currentTimeMillis() // New start time
+            // Only set start time if there isn't one already or if we want to overwrite
+            val existingStartTime = getStartTime()
+            if (existingStartTime > 0L) existingStartTime else System.currentTimeMillis()
         }
         
         prefs.edit().apply {

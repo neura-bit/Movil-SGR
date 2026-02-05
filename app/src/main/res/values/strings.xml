@@ -58,5 +58,26 @@
     <string name="task_not_available">N/A</string>
     <!-- Dynamic Strings -->
     <string name="asesor_full_name">%1$s %2$s</string>
+    <string name="username_handle">@%1$s</string>
     <string name="execution_time_minutes">%1$s min</string>
+    
+    <!-- Error Messages -->
+    <string name="error_fetch_tasks">Error al cargar tareas</string>
+    <string name="error_start_task">Error al iniciar la tarea</string>
+    <string name="error_finish_task">Error al finalizar la tarea</string>
+    <string name="error_connection">Error de conexión: %1$s</string>
+    <string name="error_unknown">Error desconocido</string>
+    <string name="error_invalid_code">Código de verificación incorrecto</string>
+    
+    <!-- Messages -->
+    <string name="msg_task_not_available">La tarea en proceso ya no está disponible</string>
+    <string name="msg_active_task_exists">Ya tienes una tarea en proceso. Finalízala antes de iniciar otra.</string>
+    <string name="msg_location_background_title">Ubicación en segundo plano</string>
+    <string name="msg_location_background_desc">Para que tus supervisores puedan ver tu ruta completa incluso con la app cerrada, selecciona "Permitir todo el tiempo" en la siguiente pantalla.</string>
+    <string name="msg_recommend_background_location">Se recomienda permitir ubicación en segundo plano para un mejor seguimiento.</string>
+    
+    <!-- Buttons -->
+    <string name="btn_understood">Entendido</string>
+    <string name="btn_not_now">Ahora no</string>
+    <string name="btn_continuar_tarea">Continuar Tarea</string>
 </resources>
