@@ -7,9 +7,10 @@ import okhttp3.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import com.example.soprintsgr.data.SessionManager
+import com.example.soprintsgr.BuildConfig
 
 object RetrofitClient {
-    private const val BASE_URL = "https://seguimiento.srv1070869.hstgr.cloud/"
+    private const val BASE_URL = BuildConfig.BASE_URL
     private var sessionManager: SessionManager? = null
 
     fun initialize(context: Context) {

@@ -17,6 +17,26 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    buildFeatures {
+        buildConfig = true
+    }
+
+    flavorDimensions += "environment"
+
+    productFlavors {
+        create("dev") {
+            dimension = "environment"
+            applicationIdSuffix = ".dev"
+            buildConfigField("String", "BASE_URL", "\"http://148.230.85.129:8090/\"")
+            resValue("string", "app_name", "UBIKA [DEV]")
+        }
+        create("prod") {
+            dimension = "environment"
+            buildConfigField("String", "BASE_URL", "\"https://seguimiento.srv1070869.hstgr.cloud/\"")
+            resValue("string", "app_name", "UBIKA")
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false

@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App name override is handled via resValue in build.gradle.kts -->
+</resources>
