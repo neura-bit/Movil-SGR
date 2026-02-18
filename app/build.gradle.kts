@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.google.services)
 }
 
 android {
@@ -26,7 +27,7 @@ android {
     productFlavors {
         create("dev") {
             dimension = "environment"
-            applicationIdSuffix = ".dev"
+            // applicationIdSuffix = ".dev" // Comented to match google-services.json
             buildConfigField("String", "BASE_URL", "\"http://148.230.85.129:8090/\"")
             resValue("string", "app_name", "UBIKA [DEV]")
         }
@@ -72,4 +73,5 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
     implementation("com.github.bumptech.glide:glide:4.16.0")
     implementation("de.hdodenhof:circleimageview:3.1.0")
+    implementation(libs.firebase.messaging)
 }

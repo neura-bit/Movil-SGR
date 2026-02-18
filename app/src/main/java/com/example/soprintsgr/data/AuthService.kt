@@ -36,4 +36,17 @@ class AuthService(private val context: Context) {
     fun getSessionManager(): SessionManager {
         return sessionManager
     }
+
+    suspend fun updateFcmToken(userId: Long, token: String) {
+        try {
+            val response = RetrofitClient.api.updateFcmToken(userId, token)
+            if (!response.isSuccessful) {
+                val errorBody = response.errorBody()?.string() ?: "Unknown error"
+                throw Exception("Failed to update FCM token: ${response.code()} - $errorBody")
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            throw e // Re-throw to be caught by UI
+        }
+    }
 }

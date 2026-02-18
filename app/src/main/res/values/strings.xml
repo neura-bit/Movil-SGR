@@ -80,4 +80,8 @@
     <string name="btn_understood">Entendido</string>
     <string name="btn_not_now">Ahora no</string>
     <string name="btn_continuar_tarea">Continuar Tarea</string>
+
+    <!-- Notification Strings -->
+    <string name="default_notification_channel_id">fcm_default_channel</string>
+    <string name="default_notification_channel_name">Notificaciones de Tareas</string>
 </resources>

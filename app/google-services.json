@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "862528759791",
+    "project_id": "ubikanotificaciones",
+    "storage_bucket": "ubikanotificaciones.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:862528759791:android:6f58e2120b3a712c47381a",
+        "android_client_info": {
+          "package_name": "com.example.soprintsgr"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBKuCrkW4GkXepCsNUwBCu-jAKI4y2ufm0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

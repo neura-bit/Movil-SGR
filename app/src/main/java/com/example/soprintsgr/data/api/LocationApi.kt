@@ -58,5 +58,11 @@ interface LocationApi {
         @retrofit2.http.Query("fechaInicio") fechaInicio: String,
         @retrofit2.http.Query("fechaFin") fechaFin: String
     ): Response<List<CompletedTask>>
+
+    @retrofit2.http.PATCH("api/usuarios/{id}/fcm-token")
+    suspend fun updateFcmToken(
+        @retrofit2.http.Path("id") id: Long,
+        @Body token: String
+    ): Response<Void>
 }
 

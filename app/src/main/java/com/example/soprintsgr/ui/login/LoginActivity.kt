@@ -147,6 +147,30 @@ class LoginActivity : AppCompatActivity() {
                 val result = authService.login(username, password)
                 
                 result.onSuccess { loginResponse ->
+                    // Guardar token FCM si existe
+                    com.google.firebase.messaging.FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+                        if (!task.isSuccessful) {
+                            return@addOnCompleteListener
+                        }
+                        val token = task.result
+                        
+                        lifecycleScope.launch {
+                            try {
+                                if (loginResponse.idUsuario != null) {
+                                    authService.updateFcmToken(loginResponse.idUsuario.toLong(), token)
+                                }
+                            } catch (e: Exception) {
+                                runOnUiThread {
+                                    Toast.makeText(
+                                        this@LoginActivity, 
+                                        "Error actualizando token notificaciones: ${e.message}", 
+                                        Toast.LENGTH_LONG
+                                    ).show()
+                                }
+                            }
+                        }
+                    }
+
                     Toast.makeText(
                         this@LoginActivity, 
                         "Bienvenido ${loginResponse.nombre}!", 
