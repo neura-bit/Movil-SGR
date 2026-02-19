@@ -654,6 +654,11 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         } else {
             hideActiveTaskBanner()
         }
+        
+        // Clear all notifications
+        val notificationManager = getSystemService(android.content.Context.NOTIFICATION_SERVICE) as android.app.NotificationManager
+        notificationManager.cancelAll()
+        
         // Reload tasks
         loadTasks()
     }
