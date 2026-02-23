@@ -157,6 +157,9 @@ class LoginActivity : AppCompatActivity() {
                         lifecycleScope.launch {
                             try {
                                 if (loginResponse.idUsuario != null) {
+                                    // Initialize RetrofitClient before making API call
+                                    // so the auth interceptor has access to the JWT token
+                                    com.example.soprintsgr.data.api.RetrofitClient.initialize(this@LoginActivity)
                                     authService.updateFcmToken(loginResponse.idUsuario.toLong(), token)
                                 }
                             } catch (e: Exception) {
