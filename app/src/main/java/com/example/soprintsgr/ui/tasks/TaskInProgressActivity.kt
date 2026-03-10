@@ -48,6 +48,7 @@ class TaskInProgressActivity : AppCompatActivity() {
     private lateinit var tvTaskName: TextView
     private lateinit var tvClienteName: TextView
     private lateinit var tvClienteAddress: TextView
+    private lateinit var tvClienteDetalle: TextView
     private lateinit var tvClientePhone: TextView
     private lateinit var btnCallClient: MaterialButton
     private lateinit var btnOpenMap: MaterialButton
@@ -93,6 +94,7 @@ class TaskInProgressActivity : AppCompatActivity() {
         tvTaskName = findViewById(R.id.tvTaskName)
         tvClienteName = findViewById(R.id.tvClienteName)
         tvClienteAddress = findViewById(R.id.tvClienteAddress)
+        tvClienteDetalle = findViewById(R.id.tvClienteDetalle)
         tvClientePhone = findViewById(R.id.tvClientePhone)
         btnCallClient = findViewById(R.id.btnCallClient)
         btnOpenMap = findViewById(R.id.btnOpenMap)
@@ -123,6 +125,14 @@ class TaskInProgressActivity : AppCompatActivity() {
             tvTaskName.text = task.nombre
             tvClienteName.text = task.cliente.nombre
             tvClienteAddress.text = task.cliente.direccion
+            
+            if (!task.cliente.detalle.isNullOrBlank()) {
+                tvClienteDetalle.visibility = View.VISIBLE
+                tvClienteDetalle.text = "Ref: ${task.cliente.detalle}"
+            } else {
+                tvClienteDetalle.visibility = View.GONE
+            }
+            
             tvClientePhone.text = task.cliente.telefono
 
             // Load Attachments

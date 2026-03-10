@@ -43,7 +43,8 @@ data class Cliente(
     val direccion: String,
     val ciudad: String,
     val latitud: Double,
-    val longitud: Double
+    val longitud: Double,
+    val detalle: String? = null
 )
 
 data class EstadoTarea(

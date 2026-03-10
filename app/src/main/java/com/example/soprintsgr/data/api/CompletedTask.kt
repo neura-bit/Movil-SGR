@@ -20,6 +20,7 @@ data class CompletedTask(
     val clienteCiudad: String,
     val clienteLatitud: Double,
     val clienteLongitud: Double,
+    val clienteDetalle: String?,
     
     // User fields (flattened)
     val asesorCrea: String?,
@@ -62,7 +63,8 @@ data class CompletedTask(
                 direccion = clienteDireccion,
                 ciudad = clienteCiudad,
                 latitud = clienteLatitud,
-                longitud = clienteLongitud
+                longitud = clienteLongitud,
+                detalle = clienteDetalle
             ),
             estadoTarea = EstadoTarea(0, estadoTarea),
             asesorCrea = Usuario(0, asesorCrea ?: "", "", "", "", true, "", 

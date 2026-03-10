@@ -167,6 +167,17 @@
                                 android:textColor="@color/task_text_primary"
                                 android:textSize="15sp" />
 
+                            <TextView
+                                android:id="@+id/tvClienteDetalle"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                tools:text="Referencia: Casa roja"
+                                android:textColor="@color/task_text_secondary"
+                                android:textSize="13sp"
+                                android:textStyle="italic"
+                                android:layout_marginTop="2dp"
+                                android:visibility="gone" />
+
                         </LinearLayout>
 
                     </LinearLayout>

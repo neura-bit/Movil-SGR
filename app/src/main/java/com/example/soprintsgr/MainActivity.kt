@@ -346,6 +346,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         val tvTaskEstado = dialogView.findViewById<TextView>(R.id.tvTaskEstado)
         val tvClienteNombre = dialogView.findViewById<TextView>(R.id.tvClienteNombre)
         val tvClienteDireccion = dialogView.findViewById<TextView>(R.id.tvClienteDireccion)
+        val tvClienteDetalle = dialogView.findViewById<TextView>(R.id.tvClienteDetalle)
         val tvClienteTelefono = dialogView.findViewById<TextView>(R.id.tvClienteTelefono)
         val btnCallPhone = dialogView.findViewById<android.widget.ImageButton>(R.id.btnCallPhone)
         val tvTipoOperacion = dialogView.findViewById<TextView>(R.id.tvTipoOperacion)
@@ -365,6 +366,14 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         // Set cliente data
         tvClienteNombre.text = task.cliente.nombre
         tvClienteDireccion.text = task.cliente.direccion
+        
+        if (!task.cliente.detalle.isNullOrBlank()) {
+            tvClienteDetalle.visibility = View.VISIBLE
+            tvClienteDetalle.text = "Ref: ${task.cliente.detalle}"
+        } else {
+            tvClienteDetalle.visibility = View.GONE
+        }
+        
         tvClienteTelefono.text = task.cliente.telefono
         
         // Set task details
