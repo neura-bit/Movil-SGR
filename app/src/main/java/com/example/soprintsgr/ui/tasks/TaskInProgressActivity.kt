@@ -24,6 +24,10 @@ import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.gms.location.LocationServices
+import android.content.pm.PackageManager
+import androidx.core.app.ActivityCompat
+import android.Manifest
 import com.example.soprintsgr.data.api.ArchivoAdjunto
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.model.GlideUrl
@@ -252,24 +256,31 @@ class TaskInProgressActivity : AppCompatActivity() {
         val tvError = dialogView.findViewById<TextView>(R.id.tvError)
         val btnCancelar = dialogView.findViewById<MaterialButton>(R.id.btnCancelar)
         val btnFinalizar = dialogView.findViewById<MaterialButton>(R.id.btnFinalizar)
+        val tvManualOverride = dialogView.findViewById<TextView>(R.id.tvManualOverride)
 
         // Configure dialog based on task type
         val isEntrega = task.tipoOperacion.nombre.equals("Entrega", ignoreCase = true)
         if (isEntrega) {
-            llCodigoSection.visibility = View.VISIBLE
-            tvMensajeAyuda.text = "Solicita el código de verificación de 4 dígitos al cliente e ingresa una observación."
+            llCodigoSection.visibility = View.GONE
+            tvManualOverride.visibility = View.VISIBLE
+            tvMensajeAyuda.text = "Haz clic en Finalizar para validar que estás a menos de 30 metros del punto de entrega."
             
             // Setup auto-focus entre cajas
             setupCodeInputs(etCode1, etCode2, etCode3, etCode4)
             
-            // Focus en la primera caja
-            etCode1.requestFocus()
-            etCode1.postDelayed({
-                val imm = getSystemService(android.content.Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
-                imm.showSoftInput(etCode1, android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT)
-            }, 200)
+            tvManualOverride.setOnClickListener {
+                llCodigoSection.visibility = View.VISIBLE
+                tvManualOverride.visibility = View.GONE
+                tvMensajeAyuda.text = "Solicita el código de verificación de 4 dígitos al cliente e ingresa una observación."
+                etCode1.requestFocus()
+                etCode1.postDelayed({
+                    val imm = getSystemService(android.content.Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
+                    imm.showSoftInput(etCode1, android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT)
+                }, 200)
+            }
         } else {
             llCodigoSection.visibility = View.GONE
+            tvManualOverride.visibility = View.GONE
             tvMensajeAyuda.text = "Por favor, ingresa una observación para completar esta tarea."
         }
 
@@ -298,27 +309,55 @@ class TaskInProgressActivity : AppCompatActivity() {
 
             // Validate code if it's a delivery task
             if (isEntrega) {
-                val code1 = etCode1.text?.toString()?.trim() ?: ""
-                val code2 = etCode2.text?.toString()?.trim() ?: ""
-                val code3 = etCode3.text?.toString()?.trim() ?: ""
-                val code4 = etCode4.text?.toString()?.trim() ?: ""
-                
-                if (code1.isEmpty() || code2.isEmpty() || code3.isEmpty() || code4.isEmpty()) {
-                    tvError.text = "Debes ingresar los 4 dígitos del código de verificación"
-                    cvError.visibility = View.VISIBLE
+                if (llCodigoSection.visibility == View.VISIBLE) {
+                    val code1 = etCode1.text?.toString()?.trim() ?: ""
+                    val code2 = etCode2.text?.toString()?.trim() ?: ""
+                    val code3 = etCode3.text?.toString()?.trim() ?: ""
+                    val code4 = etCode4.text?.toString()?.trim() ?: ""
                     
-                    // Focus en la primera caja vacía
-                    when {
-                        code1.isEmpty() -> etCode1.requestFocus()
-                        code2.isEmpty() -> etCode2.requestFocus()
-                        code3.isEmpty() -> etCode3.requestFocus()
-                        code4.isEmpty() -> etCode4.requestFocus()
+                    if (code1.isEmpty() || code2.isEmpty() || code3.isEmpty() || code4.isEmpty()) {
+                        tvError.text = "Debes ingresar los 4 dígitos del código de verificación"
+                        cvError.visibility = View.VISIBLE
+                        
+                        when {
+                            code1.isEmpty() -> etCode1.requestFocus()
+                            code2.isEmpty() -> etCode2.requestFocus()
+                            code3.isEmpty() -> etCode3.requestFocus()
+                            code4.isEmpty() -> etCode4.requestFocus()
+                        }
+                        return@setOnClickListener
                     }
-                    return@setOnClickListener
+                    val codigo = "$code1$code2$code3$code4"
+                    finalizarTarea(task, codigo, observacion, btnFinalizar, tvError, cvError, dialog)
+                } else {
+                    // Cierre por PROXIMIDAD
+                    val hasPermission = ActivityCompat.checkSelfPermission(this@TaskInProgressActivity, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+                    if (!hasPermission) {
+                        tvError.text = "Sin permisos de GPS. Por favor, ingresa el código manual."
+                        cvError.visibility = View.VISIBLE
+                        return@setOnClickListener
+                    }
+
+                    btnFinalizar.isEnabled = false
+                    btnFinalizar.text = "Buscando GPS..."
+                    
+                    val fusedLocationClient = LocationServices.getFusedLocationProviderClient(this@TaskInProgressActivity)
+                    fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+                        if (location != null) {
+                            finalizarTareaProximidad(task, location.latitude, location.longitude, observacion, btnFinalizar, tvError, cvError, dialog)
+                        } else {
+                            tvError.text = "No se pudo obtener la ubicación actual. Utiliza el Código Manual."
+                            cvError.visibility = View.VISIBLE
+                            btnFinalizar.isEnabled = true
+                            btnFinalizar.text = "Finalizar"
+                        }
+                    }.addOnFailureListener {
+                        tvError.text = "Error al obtener ubicación. Utiliza el Código Manual."
+                        cvError.visibility = View.VISIBLE
+                        btnFinalizar.isEnabled = true
+                        btnFinalizar.text = "Finalizar"
+                    }
                 }
-                
-                val codigo = "$code1$code2$code3$code4"
-                finalizarTarea(task, codigo, observacion, btnFinalizar, tvError, cvError, dialog)
             } else {
                 finalizarTarea(task, null, observacion, btnFinalizar, tvError, cvError, dialog)
             }
@@ -415,6 +454,46 @@ class TaskInProgressActivity : AppCompatActivity() {
                 cvError.visibility = View.VISIBLE
                 
                 // Reset button state
+                btnFinalizar.isEnabled = true
+                btnFinalizar.text = "Finalizar"
+                btnFinalizar.setIconResource(R.drawable.ic_check_circle)
+            }
+        }
+    }
+
+    private fun finalizarTareaProximidad(
+        task: Task,
+        latitud: Double,
+        longitud: Double,
+        observacion: String,
+        btnFinalizar: MaterialButton,
+        tvError: TextView,
+        cvError: com.google.android.material.card.MaterialCardView,
+        dialog: AlertDialog
+    ) {
+        lifecycleScope.launch {
+            try {
+                btnFinalizar.text = "Finalizando..."
+                val result = taskRepository.finalizarTareaConProximidad(task.idTarea, latitud, longitud, observacion)
+
+                if (result.isSuccess) {
+                    activeTaskManager.clearActiveTask()
+                    val refreshIntent = Intent("com.example.soprintsgr.TASK_COMPLETED")
+                    sendBroadcast(refreshIntent)
+                    Toast.makeText(this@TaskInProgressActivity, "Tarea finalizada exitosamente por proximidad", Toast.LENGTH_SHORT).show()
+                    dialog.dismiss()
+                    finish()
+                } else {
+                    val errorMessage = result.exceptionOrNull()?.message ?: "Error desconocido"
+                    tvError.text = errorMessage
+                    cvError.visibility = View.VISIBLE
+                    btnFinalizar.isEnabled = true
+                    btnFinalizar.text = "Finalizar"
+                    btnFinalizar.setIconResource(R.drawable.ic_check_circle)
+                }
+            } catch (e: Exception) {
+                tvError.text = "Error: ${e.message}"
+                cvError.visibility = View.VISIBLE
                 btnFinalizar.isEnabled = true
                 btnFinalizar.text = "Finalizar"
                 btnFinalizar.setIconResource(R.drawable.ic_check_circle)

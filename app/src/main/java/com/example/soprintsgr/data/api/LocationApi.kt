@@ -22,6 +22,13 @@ data class FinalizarConCodigoRequest(
     val observacion: String
 )
 
+data class FinalizarConProximidadRequest(
+    val latitudMensajero: Double,
+    val longitudMensajero: Double,
+    val idEstadoTarea: Int,
+    val observacion: String
+)
+
 data class IniciarTareaRequest(
     val idEstadoTarea: Int = 2 // EN PROCESO
 )
@@ -51,6 +58,12 @@ interface LocationApi {
     suspend fun finalizarTareaConCodigo(
         @retrofit2.http.Path("idTarea") idTarea: Int,
         @Body request: FinalizarConCodigoRequest
+    ): Response<Task>
+
+    @retrofit2.http.PUT("api/tareas/{idTarea}/finalizar-con-proximidad")
+    suspend fun finalizarTareaConProximidad(
+        @retrofit2.http.Path("idTarea") idTarea: Int,
+        @Body request: FinalizarConProximidadRequest
     ): Response<Task>
 
     @retrofit2.http.GET("api/tareas/mis-tareas-completadas")

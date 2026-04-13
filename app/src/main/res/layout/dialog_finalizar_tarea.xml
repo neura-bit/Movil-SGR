@@ -138,9 +138,22 @@
                         android:textStyle="bold"
                         android:importantForAutofill="no" />
 
-                </LinearLayout>
+                </LinearLayout> <!-- Container para cajas -->
 
-            </LinearLayout>
+            </LinearLayout> <!-- llCodigoSection -->
+
+            <!-- Boton de salvavidas manual (visible solo si falla la proximidad) -->
+            <TextView
+                android:id="@+id/tvManualOverride"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                android:gravity="center"
+                android:text="¿Problemas de GPS? Ingresar Código Manual"
+                android:textColor="@color/login_accent"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:visibility="gone" />
 
             <!-- Campo de observación mejorado -->
             <TextView

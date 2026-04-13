@@ -96,6 +96,30 @@ class TaskRepository(context: Context) {
         }
     }
 
+    suspend fun finalizarTareaConProximidad(idTarea: Int, latitud: Double, longitud: Double, observacion: String): Result<Task> {
+        return try {
+            val request = com.example.soprintsgr.data.api.FinalizarConProximidadRequest(
+                latitudMensajero = latitud,
+                longitudMensajero = longitud,
+                idEstadoTarea = 3,
+                observacion = observacion
+            )
+            val response = RetrofitClient.api.finalizarTareaConProximidad(idTarea, request)
+            if (response.isSuccessful && response.body() != null) {
+                Log.d(TAG, "Tarea $idTarea finalizada con proximidad exitosamente")
+                Result.success(response.body()!!)
+            } else {
+                val errorBodyStr = response.errorBody()?.string()
+                val errorMsg = errorBodyStr ?: "Error al finalizar tarea por proximidad: ${response.code()}"
+                Log.e(TAG, errorMsg)
+                Result.failure(Exception(errorMsg))
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error finalizando tarea con proximidad", e)
+            Result.failure(e)
+        }
+    }
+
     suspend fun getCompletedTasks(fechaInicio: String, fechaFin: String): List<Task> {
         return try {
             val response = RetrofitClient.api.getCompletedTasks(fechaInicio, fechaFin)
