@@ -25,6 +25,8 @@ import java.util.concurrent.TimeUnit
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
+import com.google.android.gms.tasks.CancellationTokenSource
 import android.content.pm.PackageManager
 import androidx.core.app.ActivityCompat
 import android.Manifest
@@ -263,7 +265,7 @@ class TaskInProgressActivity : AppCompatActivity() {
         if (isEntrega) {
             llCodigoSection.visibility = View.GONE
             tvManualOverride.visibility = View.VISIBLE
-            tvMensajeAyuda.text = "Haz clic en Finalizar para validar que estás a menos de 30 metros del punto de entrega."
+            tvMensajeAyuda.text = "Haz clic en Finalizar para validar que estás a menos de 100 metros del punto de entrega."
             
             // Setup auto-focus entre cajas
             setupCodeInputs(etCode1, etCode2, etCode3, etCode4)
@@ -284,12 +286,21 @@ class TaskInProgressActivity : AppCompatActivity() {
             tvMensajeAyuda.text = "Por favor, ingresa una observación para completar esta tarea."
         }
 
+        // Declarado aquí para que el OnDismissListener pueda cancelarlo si el diálogo se cierra
+        // mientras el GPS está buscando la ubicación
+        var gpsCancellationToken: CancellationTokenSource? = null
+
         val dialog = AlertDialog.Builder(this)
             .setView(dialogView)
             .setCancelable(false)
             .create()
 
         dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+
+        // Cancelar solicitud GPS activa si el diálogo se cierra
+        dialog.setOnDismissListener {
+            gpsCancellationToken?.cancel()
+        }
 
         btnCancelar.setOnClickListener {
             dialog.dismiss()
@@ -339,20 +350,45 @@ class TaskInProgressActivity : AppCompatActivity() {
                     }
 
                     btnFinalizar.isEnabled = false
-                    btnFinalizar.text = "Buscando GPS..."
+                    btnFinalizar.text = "Obteniendo GPS preciso..."
                     
                     val fusedLocationClient = LocationServices.getFusedLocationProviderClient(this@TaskInProgressActivity)
-                    fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+                    val cancellationTokenSource = CancellationTokenSource()
+                    gpsCancellationToken = cancellationTokenSource
+
+                    // Usar getCurrentLocation para obtener ubicación FRESCA con alta precisión
+                    // en vez de lastLocation que puede ser vieja o imprecisa
+                    fusedLocationClient.getCurrentLocation(
+                        Priority.PRIORITY_HIGH_ACCURACY,
+                        cancellationTokenSource.token
+                    ).addOnSuccessListener { location ->
                         if (location != null) {
-                            finalizarTareaProximidad(task, location.latitude, location.longitude, observacion, btnFinalizar, tvError, cvError, dialog)
+                            val accuracy = location.accuracy
+                            if (accuracy <= 100f) {
+                                // Precisión aceptable, proceder
+                                finalizarTareaProximidad(task, location.latitude, location.longitude, observacion, btnFinalizar, tvError, cvError, dialog)
+                            } else {
+                                // Precisión baja, advertir al usuario
+                                tvError.text = "Precisión GPS baja (±${accuracy.toInt()}m). Acércate a un área abierta o utiliza el Código Manual."
+                                cvError.visibility = View.VISIBLE
+                                btnFinalizar.isEnabled = true
+                                btnFinalizar.text = "Finalizar"
+                            }
                         } else {
-                            tvError.text = "No se pudo obtener la ubicación actual. Utiliza el Código Manual."
-                            cvError.visibility = View.VISIBLE
-                            btnFinalizar.isEnabled = true
-                            btnFinalizar.text = "Finalizar"
+                            // getCurrentLocation devolvió null, intentar con lastLocation como fallback
+                            fusedLocationClient.lastLocation.addOnSuccessListener { fallbackLocation ->
+                                if (fallbackLocation != null) {
+                                    finalizarTareaProximidad(task, fallbackLocation.latitude, fallbackLocation.longitude, observacion, btnFinalizar, tvError, cvError, dialog)
+                                } else {
+                                    tvError.text = "No se pudo obtener la ubicación. Activa el GPS y reintenta, o utiliza el Código Manual."
+                                    cvError.visibility = View.VISIBLE
+                                    btnFinalizar.isEnabled = true
+                                    btnFinalizar.text = "Finalizar"
+                                }
+                            }
                         }
                     }.addOnFailureListener {
-                        tvError.text = "Error al obtener ubicación. Utiliza el Código Manual."
+                        tvError.text = "Error al obtener ubicación GPS. Utiliza el Código Manual."
                         cvError.visibility = View.VISIBLE
                         btnFinalizar.isEnabled = true
                         btnFinalizar.text = "Finalizar"
