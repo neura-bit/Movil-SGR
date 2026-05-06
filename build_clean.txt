@@ -1,0 +1,64 @@
+﻿.\gradlew : WARNING: A restricted method in java.lang.System has been called
+En línea: 1 Carácter: 1
++ .\gradlew clean assembleDevDebug 2>&1 | Out-File -FilePath "build_cle ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (WARNING: A rest...has been called:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+WARNING: java.lang.System::load has been called by net.rubygrapefruit.platform.internal.NativeLibraryLoader in an 
+unnamed module (file:/C:/Users/KuboC/.gradle/wrapper/dists/gradle-8.11.1-bin/bpt9gzteqjrbo1mjrsomdt32c/gradle-8.11.1/li
+b/native-platform-0.22-milestone-26.jar)
+WARNING: Use --enable-native-access=ALL-UNNAMED to avoid a warning for callers in this module
+WARNING: Restricted methods will be blocked in a future release unless native access is enabled
+
+> Task :app:clean
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDevDebugBuild UP-TO-DATE
+> Task :app:mergeDevDebugNativeDebugMetadata NO-SOURCE
+> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :app:generateDevDebugBuildConfig
+> Task :app:generateDevDebugResValues
+> Task :app:checkDevDebugAarMetadata
+> Task :app:processDevDebugGoogleServices
+> Task :app:mapDevDebugSourceSetPaths
+> Task :app:generateDevDebugResources
+> Task :app:packageDevDebugResources
+> Task :app:createDevDebugCompatibleScreenManifests
+> Task :app:extractDeepLinksDevDebug
+> Task :app:parseDevDebugLocalResources
+> Task :app:mergeDevDebugResources
+> Task :app:processDevDebugMainManifest
+> Task :app:processDevDebugManifest
+> Task :app:processDevDebugManifestForPackage
+> Task :app:javaPreCompileDevDebug
+> Task :app:mergeDevDebugShaders
+> Task :app:compileDevDebugShaders NO-SOURCE
+> Task :app:generateDevDebugAssets UP-TO-DATE
+> Task :app:mergeDevDebugAssets
+> Task :app:compressDevDebugAssets
+> Task :app:desugarDevDebugFileDependencies
+> Task :app:mergeDevDebugJniLibFolders
+> Task :app:mergeDevDebugNativeLibs NO-SOURCE
+> Task :app:stripDevDebugDebugSymbols NO-SOURCE
+> Task :app:validateSigningDevDebug
+> Task :app:writeDevDebugAppMetadata
+> Task :app:writeDevDebugSigningConfigVersions
+> Task :app:checkDevDebugDuplicateClasses
+> Task :app:mergeLibDexDevDebug
+> Task :app:mergeExtDexDevDebug
+> Task :app:processDevDebugResources
+
+> Task :app:compileDevDebugKotlin
+w: file:///C:/kubo%20Code%20Proyectos/Movil-SGR/app/src/main/java/com/example/soprintsgr/ui/login/LoginActivity.kt:159:37 Condition is always 'true'.
+
+> Task :app:compileDevDebugJavaWithJavac
+> Task :app:processDevDebugJavaRes
+> Task :app:dexBuilderDevDebug
+> Task :app:mergeProjectDexDevDebug
+> Task :app:mergeDevDebugJavaResource
+> Task :app:packageDevDebug
+> Task :app:createDevDebugApkListingFileRedirect
+> Task :app:assembleDevDebug
+
+BUILD SUCCESSFUL in 3m 21s
+36 actionable tasks: 36 executed
